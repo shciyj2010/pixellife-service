@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <symbol id="avatar" viewBox="0 0 16 16">
+    <path fill="#38444b" d="M4 1h8v2h2v3h1v6h-2v2H3v-2H1V6h1V3h2z"/>
+    <path fill="#d6aa84" d="M3 7h3V5h5v2h2v5h-2v2H5v-2H3z"/>
+    <path fill="#38444b" d="M5 8h2v2H5zm4 0h2v2H9z"/>
+  </symbol>
+  <symbol id="avatar-female" viewBox="0 0 16 16">
+    <path fill="#503944" d="M4 1h8v2h2v3h1v9h-4v-2H5v2H1V6h1V3h2z"/>
+    <path fill="#e6b38c" d="M4 7h3V5h4v2h2v5h-2v2H5v-2H3V8h1z"/>
+    <path fill="#34343c" d="M5 8h2v3H5zm4 0h2v3H9z"/>
+    <path fill="#ee9a95" d="M4 11h2v1H4zm7 0h1v1h-1zM11 4h2v2h-2z"/>
+  </symbol>
+  <symbol id="coin" viewBox="0 0 16 16">
+    <path fill="#755637" d="M4 1h8v2h2v2h1v6h-1v2h-2v2H4v-2H2v-2H1V5h1V3h2z"/>
+    <path fill="#ecc268" d="M4 3h8v2h2v6h-2v2H4v-2H2V5h2z"/>
+    <path fill="#fff0aa" d="M5 4h6v2H5z"/>
+  </symbol>
+  <symbol id="house" viewBox="0 0 16 16">
+    <path fill="#893f4c" d="M7 1h2v2h2v2h2v2h2v3H1V7h2V5h2V3h2z"/>
+    <path fill="#d4ad8e" d="M3 9h10v6H3z"/>
+    <path fill="#654b4e" d="M7 10h3v5H7z"/>
+  </symbol>
+  <symbol id="home" viewBox="0 0 16 16">
+    <path fill="currentColor" d="M7 1h2v2h2v2h2v2h2v2h-2v6H9v-4H7v4H3V9H1V7h2V5h2V3h2z"/>
+  </symbol>
+  <symbol id="bank" viewBox="0 0 16 16">
+    <path fill="currentColor" d="M2 3h12v2h1v9H2V3zm2 2v7h9v-2H9V7h4V5zm7 3v1h2V8z" fill-rule="evenodd"/>
+  </symbol>
+  <symbol id="bell" viewBox="0 0 16 16">
+    <path fill="currentColor" d="M7 1h2v2h3v2h1v5h2v2H1v-2h2V5h1V3h3zm-1 12h4v2H6z"/>
+  </symbol>
+  <symbol id="settings" viewBox="0 0 16 16">
+    <path fill="currentColor" fill-rule="evenodd" d="M6 1h4v2h3v3h2v4h-2v3h-3v2H6v-2H3v-3H1V6h2V3h3zm0 5v4h4V6z"/>
+  </symbol>
+</svg>

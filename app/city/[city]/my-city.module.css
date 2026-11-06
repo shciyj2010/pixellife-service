@@ -1,0 +1,274 @@
+.page {
+  min-height: 100svh;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  padding: clamp(10px, 3vw, 28px);
+  background: #e2e7df;
+  color: #17272b;
+  font-family: "Apple SD Gothic Neo", "Malgun Gothic", Arial, sans-serif;
+}
+
+.frame {
+  width: min(100%, 680px);
+  box-sizing: border-box;
+  border: 1px solid #a2aaa1;
+  background: #eef0e9;
+  box-shadow: 3px 3px #cbd2c9;
+}
+
+.header,
+.title,
+.dashboard,
+.actions {
+  margin-inline: clamp(12px, 3vw, 24px);
+}
+
+.header,
+.title,
+.level,
+.balance {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header,
+.title {
+  justify-content: space-between;
+}
+
+.header {
+  min-height: 64px;
+  font-size: clamp(1.15rem, 4.6vw, 1.6rem);
+  border-bottom: 1px solid #a2aaa1;
+  font-variant-numeric: tabular-nums;
+}
+
+.frame svg {
+  width: 24px;
+  height: 24px;
+  flex: none;
+}
+
+.header svg {
+  width: clamp(28px, 7vw, 38px);
+  height: clamp(28px, 7vw, 38px);
+}
+
+.avatarToggle {
+  display: flex;
+  border: 1px solid #a2aaa1;
+  white-space: nowrap;
+}
+
+.avatarToggle button {
+  min-height: 32px;
+  padding: 4px clamp(5px, 1.6vw, 12px);
+  border: 0;
+  background: transparent;
+  color: #293a3c;
+}
+
+.frame .avatarToggle button {
+  font-size: clamp(0.75rem, 3vw, 0.9rem);
+  font-weight: 800;
+}
+
+.avatarToggle button[aria-pressed="true"] {
+  background: #105a55;
+  color: #fffaf1;
+}
+
+.sceneUnavailable {
+  margin-inline: clamp(12px, 3vw, 24px);
+  padding-block: 30px;
+  text-align: center;
+  color: #495752;
+}
+
+.title {
+  padding-block: 12px;
+  flex-wrap: wrap;
+}
+
+.title h1,
+.title p,
+.dashboard h2 {
+  margin: 0;
+}
+
+.title h1 {
+  font-size: clamp(26px, 6vw, 44px);
+  line-height: 1.05;
+  letter-spacing: -0.045em;
+}
+
+.title p {
+  color: #495752;
+  font-size: 0.85rem;
+}
+
+.title strong {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 4px 7px;
+  color: #105a55;
+  background: #dbe7db;
+}
+
+.scene {
+  position: relative;
+  aspect-ratio: 3 / 1;
+  margin-inline: clamp(8px, 2vw, 16px);
+  background: #d7ded4;
+}
+
+.scene img {
+  object-fit: cover;
+  image-rendering: pixelated;
+}
+
+.scenePicker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 8px clamp(8px, 2vw, 16px) 12px;
+}
+
+.frame button,
+.dialog button {
+  cursor: pointer;
+  font: inherit;
+}
+
+.scenePicker button {
+  flex: 1 0 auto;
+  padding: 7px 5px;
+  border: 1px solid #aab3a8;
+  background: transparent;
+  color: inherit;
+  font-size: 0.78rem;
+}
+
+.scenePicker button[aria-pressed="true"],
+.nav button[aria-pressed="true"] {
+  background: #cbded1;
+  color: #104d49;
+}
+
+.dashboard {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 9px 10px;
+  border: 1px solid #a2aaa1;
+  font-size: clamp(0.78rem, 3.4vw, 1rem);
+}
+
+.dashboard h2 {
+  font-size: 1rem;
+}
+
+.dashboard progress {
+  display: block;
+  width: 100%;
+  height: 8px;
+  margin-top: 5px;
+  accent-color: #126660;
+}
+
+.dashboard strong {
+  color: #105a55;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.actions,
+.nav {
+  display: grid;
+}
+
+.actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding-block: 12px;
+}
+
+.actions button,
+.dialog button {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 0;
+  background: #77273f;
+  color: #fffaf1;
+  font-weight: 800;
+}
+
+.actions button:last-child,
+.dialog button {
+  background: #105a55;
+}
+
+.nav {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  padding: 4px;
+  border-top: 1px solid #a2aaa1;
+}
+
+.nav button {
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  padding: 6px 0;
+  border: 0;
+  background: transparent;
+  color: #293a3c;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.nav svg {
+  width: 19px;
+  height: 19px;
+}
+
+.frame button:focus-visible,
+.frame a:focus-visible,
+.dialog button:focus-visible {
+  outline: 2px solid #8b3550;
+  outline-offset: 2px;
+}
+
+.tabPanel {
+  min-height: 260px;
+  padding: 8px 24px 24px;
+}
+
+.tabPanel a {
+  color: #105a55;
+}
+
+.dialog {
+  max-width: min(360px, 82vw);
+  border: 1px solid #a2aaa1;
+  padding: 20px;
+  background: #eef0e9;
+  color: inherit;
+}
+
+.dialog::backdrop {
+  background: #17272b88;
+}
+
+.dialog h2 {
+  margin: 0;
+}
+
+.dialog form {
+  display: flex;
+  gap: 8px;
+}
