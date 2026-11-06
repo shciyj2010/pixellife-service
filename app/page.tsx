@@ -1,8 +1,5 @@
-import Image from "next/image";
-import StartButton from "./start-button";
+import CityPicker from "./city-picker";
 import styles from "./city-select.module.css";
-
-const asset = "/city-select";
 
 export default function Home() {
   return (
@@ -18,25 +15,7 @@ export default function Home() {
           <h1 id="game-title">픽셀 라이프</h1>
           <p>나만의 도시 자산 성장 라이프</p>
         </div>
-        <figure className={styles.map} aria-label="도시 지도. 시작 도시 서울, 잠긴 도시 도쿄와 뉴욕.">
-          <Image src={asset + "/background.svg"} alt="" width={232} height={125} className={styles.backdrop} />
-          <Image src={asset + "/island.svg"} alt="" width={128} height={75} className={styles.island} />
-          <Image src={asset + "/seoul.svg"} alt="" width={101} height={77} className={styles.seoul} />
-          <Image src={asset + "/city-block.svg"} alt="" width={72} height={34} className={styles.tokyoBlock} />
-          <Image src={asset + "/tokyo.svg"} alt="" width={25} height={47} className={styles.tokyo} />
-          <Image src={asset + "/city-block.svg"} alt="" width={72} height={34} className={styles.newYorkBlock} />
-          <Image src={asset + "/new-york.svg"} alt="" width={27} height={38} className={styles.newYork} />
-          <span className={styles.seoulLabel}>
-            <svg viewBox="0 0 12 16" aria-hidden="true">
-              <path fill="currentColor" d="M4 0h4v1h2v2h2v5h-1v2h-1v2H9v1H8v2H7v1H5v-1H4v-2H3v-1H2v-2H1V8H0V3h2V1h2z"/>
-              <path fill="#f5eee2" d="M4 4h4v4H4z"/>
-            </svg>
-            서울
-          </span>
-          <span className={styles.tokyoLabel}>도쿄</span>
-          <span className={styles.newYorkLabel}>뉴욕</span>
-        </figure>
-        <StartButton />
+        <CityPicker />
       </section>
     </main>
   );

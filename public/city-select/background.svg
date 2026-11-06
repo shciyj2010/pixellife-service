@@ -17,6 +17,4 @@
   <path fill="#a9bec6" d="M0 39h10v-3h7v-7h7v9h9v-3h6v2h8v-4h7v4h7v-7h5v-4h6v4h6v8h9v-5h7v-3h9v5h7v-8h7v-3h5v-3h7v8h5v6h10v-3h9v-8h8v-3h7v3h7v10h7v-5h10v4h7v-7h10v6h8v3h8v-4h7v22H0z"/>
   <path fill="#9eb6c0" d="M0 46h24v-4h10v3h22v-6h12v8h25v-5h16v3h18v-6h9v5h17v-6h17v8h19v-5h14v5h29v10H0z"/>
   <path fill="url(#mist)" d="M0 51h232v74H0z"/>
-  <path fill="none" stroke="#f1f0df" stroke-width="5" d="M115 78h18l17-17h29M116 97h14l13 13h25"/>
-  <path fill="none" stroke="#747c79" stroke-width="1.7" stroke-dasharray="3 2" d="M115 78h18l17-17h29M116 97h14l13 13h25"/>
 </svg>

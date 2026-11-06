@@ -88,13 +88,39 @@
 
 .backdrop { inset: 0; width: 100%; }
 .island { left: 0; top: 35%; width: 55.2%; }
-.seoul { left: 9%; top: 8.5%; width: 43.5%; }
-.tokyoBlock { left: 65%; top: 19%; width: 31%; }
-.tokyo { left: 78%; top: 5%; width: 10.8%; }
-.newYorkBlock { left: 61%; top: 67%; width: 37.5%; }
-.newYork { left: 78%; top: 58.5%; width: 11.6%; }
+.city {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  pointer-events: none;
+}
 
-.map span {
+.city img,
+.city .label {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.primary .block { left: 6%; top: 38%; width: 46%; }
+.upper .block { left: 65%; top: 19%; width: 31%; }
+.lower .block { left: 61%; top: 65%; width: 37.5%; }
+
+.primary.seoul .landmark { left: 9%; top: 8.5%; width: 43.5%; }
+.primary.tokyo .landmark { left: 22%; top: 8%; width: 15.5%; }
+.primary.newYork .landmark { left: 20%; top: 14%; width: 19%; }
+
+.upper.seoul .landmark { left: 70%; top: 4%; width: 26%; }
+.upper.tokyo .landmark { left: 78%; top: 5%; width: 10.8%; }
+.upper.newYork .landmark { left: 77%; top: 10%; width: 12.5%; }
+
+.lower.seoul .landmark { left: 68%; top: 47%; width: 26%; }
+.lower.tokyo .landmark { left: 78%; top: 48%; width: 10.8%; }
+.lower.newYork .landmark { left: 78%; top: 58.5%; width: 11.6%; }
+
+.label {
   position: absolute;
   box-sizing: border-box;
   display: grid;
@@ -110,7 +136,7 @@
   box-shadow: 1px 1px #60645f44;
 }
 
-.map .seoulLabel {
+.primary .label {
   left: 14%;
   top: 67%;
   width: 29.5%;
@@ -118,7 +144,7 @@
   font-size: 5.35cqw;
 }
 
-.seoulLabel svg {
+.label svg {
   position: absolute;
   left: 0.62em;
   top: -0.5em;
@@ -126,8 +152,21 @@
   color: #873a49;
 }
 
-.tokyoLabel { left: 74%; top: 40%; width: 15%; padding: 0.26em; }
-.newYorkLabel { left: 70%; top: 84%; width: 18%; padding: 0.26em; }
+.upper .label { left: 74%; top: 40%; width: 15%; padding: 0.26em; }
+.lower .label { left: 70%; top: 84%; width: 18%; padding: 0.26em; }
+
+.city:hover .label {
+  background: #e0e8db;
+}
+
+.city:focus-visible {
+  outline: none;
+}
+
+.city:focus-visible .label {
+  outline: 3px solid #902b49;
+  outline-offset: 2px;
+}
 
 .start,
 .back {
