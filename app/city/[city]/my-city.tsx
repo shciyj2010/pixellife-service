@@ -4,10 +4,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { homeBreadcrumb } from "../../seo";
+import { bonus, gameDateFormat, gameHourFormat, mealPrice, payday, routineAt, salary } from "./game-clock";
+import useGame from "./use-game";
 import styles from "./my-city.module.css";
 
 const asset = "/my-city";
-const balance = 1200;
 const housePrice = 3000;
 const avatars = [
   { id: "female", label: "여자", icon: "avatar-female" },
@@ -38,7 +39,17 @@ function Icon({ name }: { name: string }) {
 
 export default function MyCity({ name, title, hasScenes }: { name: string; title: string; hasScenes: boolean }) {
   const [avatar, setAvatar] = useState<(typeof avatars)[number]>(avatars[1]);
-  const [scene, setScene] = useState<(typeof scenes)[number]>(scenes[0]);
+  const { time, balance, earnings, spent, buyMeal } = useGame();
+  const routine = routineAt(time);
+  const shift = `${Math.floor(time / 86_400_000)}:${routine.id}`;
+  const [completedMission, setCompletedMission] = useState("");
+  const [preview, setPreview] = useState<{ shift: string; scene: (typeof scenes)[number] } | null>(null);
+  const [purchaseMessage, setPurchaseMessage] = useState("");
+  const waitingForMission = Boolean(routine.mission && completedMission !== shift);
+  const routineScene = waitingForMission
+    ? (routine.id === "commute" ? "home" : "office")
+    : routine.scene;
+  const scene = preview?.shift === shift ? preview.scene : scenes.find((item) => item.id === routineScene)!;
   const [tab, setTab] = useState<(typeof menu)[number]["id"]>("home");
   const [action, setAction] = useState<"earn" | "spend">("earn");
   const dialog = useRef<HTMLDialogElement>(null);
@@ -48,6 +59,7 @@ export default function MyCity({ name, title, hasScenes }: { name: string; title
 
   function openAction(nextAction: typeof action) {
     setAction(nextAction);
+    setPurchaseMessage("");
     dialog.current?.showModal();
   }
 
@@ -64,7 +76,6 @@ export default function MyCity({ name, title, hasScenes }: { name: string; title
           <div className={styles.level}>
             <Icon name={avatar.icon} />
             <strong>Lv. 1</strong>
-          </div>
           <div className={styles.avatarToggle} role="group" aria-label="캐릭터 선택">
             {avatars.map((option) => (
               <button
@@ -77,27 +88,45 @@ export default function MyCity({ name, title, hasScenes }: { name: string; title
               </button>
             ))}
           </div>
+          </div>
+          <time className={styles.gameTime} dateTime={new Date(time).toISOString().slice(0, 16)}>
+            <span>{gameDateFormat.format(time)}</span>
+            <strong>{gameHourFormat.format(time)}</strong>
+          </time>
           <div className={styles.balance}>
             <Icon name="coin" />
-            <strong aria-label={`보유 자산 ${balance.toLocaleString("ko-KR")} 코인`}>{balance.toLocaleString("ko-KR")}</strong>
+            <strong aria-label={`보유 자산 ${balance.toLocaleString("ko-KR")} 원`}>{balance.toLocaleString("ko-KR")}</strong>
           </div>
         </header>
 
         <div className={styles.title}>
           <h1>{title}</h1>
-          {hasScenes && <p>현재 위치 <strong aria-live="polite">{scene.location}</strong></p>}
+          {<p>현재 위치 <strong aria-live="polite">{waitingForMission ? (routine.id === "commute" ? "집" : "회사") : routine.location}</strong></p>}
         </div>
 
         <div className={styles.tabContent}>
           <div className={styles.homeContent} inert={tab !== "home"}>
-            <section className={styles.dashboard} aria-labelledby="house-goal">
-              <Icon name="house" />
-              <div>
-                <h2 id="house-goal">다음 집</h2>
-                <progress aria-labelledby="house-goal" value={balance} max={housePrice} />
+            <div className={styles.dashboardRow}>
+              <section className={styles.dashboard} aria-labelledby="house-goal">
+                <Icon name="house" />
+                <div>
+                  <h2 id="house-goal">다음 집</h2>
+                  <progress aria-labelledby="house-goal" value={Math.min(balance, housePrice)} max={housePrice} />
+                </div>
+                <strong>{balance.toLocaleString("ko-KR")} / {housePrice.toLocaleString("ko-KR")}</strong>
+              </section>
+              <div className={styles.actions}>
+                <button type="button" onClick={() => openAction("earn")}>돈 벌기</button>
+                <button type="button" onClick={() => openAction("spend")}>돈 쓰기</button>
               </div>
-              <strong>{balance.toLocaleString("ko-KR")} / {housePrice.toLocaleString("ko-KR")}</strong>
-            </section>
+            </div>
+            <div className={styles.mission}>
+              {waitingForMission && (
+                <button type="button" onClick={() => { setPreview(null); setCompletedMission(shift); }}>
+                  {routine.mission}
+                </button>
+              )}
+            </div>
 
             {hasScenes ? (
               <>
@@ -112,7 +141,7 @@ export default function MyCity({ name, title, hasScenes }: { name: string; title
                 </div>
                 <div className={styles.scenePicker} role="group" aria-label="장면 선택">
                   {scenes.map((item) => (
-                    <button key={item.id} type="button" aria-pressed={scene.id === item.id} onClick={() => setScene(item)}>
+                    <button key={item.id} type="button" aria-pressed={scene.id === item.id} onClick={() => setPreview({ shift, scene: item })}>
                       {item.label}
                     </button>
                   ))}
@@ -122,16 +151,25 @@ export default function MyCity({ name, title, hasScenes }: { name: string; title
               <p className={styles.sceneUnavailable}>이 도시의 장면은 준비 중이에요.</p>
             )}
 
-            <div className={styles.actions}>
-              <button type="button" onClick={() => openAction("earn")}>돈 벌기</button>
-              <button type="button" onClick={() => openAction("spend")}>돈 쓰기</button>
-            </div>
           </div>
           {tab !== "home" && (
             <section className={styles.tabPanel} aria-labelledby="tab-title">
               <h2 id="tab-title">{menu.find((item) => item.id === tab)?.label}</h2>
-              {tab === "bank" && <p>보유 자산 <strong>{balance.toLocaleString("ko-KR")} 코인</strong></p>}
-              {tab === "bell" && <p>새 알림이 없어요.</p>}
+              {tab === "bank" && (
+                <>
+                  <p>보유 자산 <strong>{balance.toLocaleString("ko-KR")}원</strong></p>
+                  <p>누적 수입 {earnings.total.toLocaleString("ko-KR")}원 · 누적 지출 {spent.toLocaleString("ko-KR")}원</p>
+                </>
+              )}
+              {tab === "bell" && (earnings.recent.length ? (
+                <ul>
+                  {earnings.recent.map((payment) => (
+                    <li key={`${payment.time}:${payment.label}`}>
+                      {gameDateFormat.format(payment.time)} · {payment.label} +{payment.amount.toLocaleString("ko-KR")}원
+                    </li>
+                  ))}
+                </ul>
+              ) : <p>새 알림이 없어요.</p>)}
               {tab === "settings" && <Link href="/">도시 선택으로 돌아가기</Link>}
             </section>
           )}
@@ -149,9 +187,18 @@ export default function MyCity({ name, title, hasScenes }: { name: string; title
 
       <dialog className={styles.dialog} ref={dialog} aria-labelledby="action-title">
         <h2 id="action-title">{action === "earn" ? "돈 벌기" : "돈 쓰기"}</h2>
-        <p>{action === "earn" ? (hasScenes ? "회사 장면에서 일하는 모습을 볼 수 있어요." : "이 도시의 회사 장면은 준비 중이에요.") : "다음 집 목표까지 1,800코인이 남았어요."}</p>
+        {action === "earn" ? (
+          <p>평일 9시에 일을 시작해 오후 6시에 마쳐요. 매월 {payday}일 월급 {salary.toLocaleString("ko-KR")}원, 매주 목요일 보너스 {bonus.toLocaleString("ko-KR")}원이 오후 6시에 들어와요.</p>
+        ) : (
+          <p>식사를 구매하면 자산에서 {mealPrice.toLocaleString("ko-KR")}원이 빠져요.</p>
+        )}
+        {purchaseMessage && <p role="status">{purchaseMessage}</p>}
         <form method="dialog">
-          {action === "earn" && hasScenes && <button onClick={() => setScene(scenes[1])}>회사로 이동</button>}
+          {action === "spend" && (
+            <button type="button" disabled={balance < mealPrice} onClick={async () => {
+              setPurchaseMessage(await buyMeal() ? "식사를 구매했어요." : "잔액이 부족해요.");
+            }}>식사 구매</button>
+          )}
           <button>닫기</button>
         </form>
       </dialog>

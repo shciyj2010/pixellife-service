@@ -305,3 +305,69 @@
 .breadcrumb a {
   color: #105a55;
 }
+
+.header {
+  flex-wrap: wrap;
+  padding-block: 8px;
+}
+
+.level {
+  flex-wrap: wrap;
+}
+
+.gameTime {
+  display: grid;
+  gap: 3px;
+  font-size: clamp(0.75rem, 3vw, 0.95rem);
+  text-align: center;
+}
+
+.dashboardRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  margin-inline: clamp(12px, 3vw, 24px);
+}
+
+.dashboardRow .dashboard,
+.dashboardRow .actions {
+  margin: 0;
+}
+
+.dashboardRow .actions {
+  padding: 0;
+}
+
+.mission {
+  min-height: 50px;
+  display: grid;
+  place-items: center;
+  margin-inline: clamp(12px, 3vw, 24px);
+}
+
+.mission button {
+  padding: 7px 16px;
+  border: 1px solid #105a55;
+  background: #dbe7db;
+  color: #104d49;
+  font-weight: 800;
+}
+
+.dialog button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+@media (max-width: 480px) {
+  .dashboardRow {
+    grid-template-columns: 1fr;
+  }
+
+  .gameTime {
+    order: 1;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+  }
+}
