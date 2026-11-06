@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+  <defs>
+    <g id="face">
+      <path fill="#2f3034" d="M8 2h16v2h4v4h2v15h-3v4h-4v3H9v-3H5v-4H2V9h2V5h4z"/>
+      <path fill="#ffcc9e" d="M7 13h3v-3h13v2h3v4h2v8h-4v3H9v-3H5v-8h2z"/>
+      <path fill="#333038" d="M10 15h4v6h-4zm10 0h4v6h-4z"/>
+      <path fill="#fff8ea" d="M12 15h2v2h-2zm10 0h2v2h-2z"/>
+      <path fill="#f39c87" d="M7 22h4v2H7zm16 0h4v2h-4z"/>
+      <path fill="#aa675f" d="M16 23h3v1h-3z"/>
+    </g>
+    <g id="female">
+      <path fill="#503944" d="M5 5h22v4h4v22h-4v4h-6v-8H11v8H5v-4H1V9h4z"/>
+      <use href="#face"/>
+      <path fill="#59404a" d="M5 8h3V5h16v3h4v6h-6v-3H10v4H5zm-1 7h3v13H4zm23 0h3v13h-3z"/>
+      <path fill="#ed9fa9" d="M24 10h5v2h-5z"/>
+    </g>
+    <g id="walking">
+      <path fill="#34363d" d="M10 27h13v3h4v8h-4v5h4v4h4v4H20v-4h-4v-4h-2v5h-3v3H2v-4h3v-5h3v-6H5v-4h5z"/>
+      <path fill="#bce2c8" d="M11 30h11v3h3v4h-4v4H10v-5H8v-3h3z"/>
+      <path fill="#f8c79e" d="M6 35h4v4H6zm16 1h4v4h-4z"/>
+      <path fill="#f7ede0" d="M4 47h6v2H4zm19 0h6v2h-6z"/>
+    </g>
+    <g id="sitting">
+      <path fill="#34363d" d="M9 27h14v3h4v11h-3v3h5v5H3v-5h5V30h1z"/>
+      <path fill="#bce2c8" d="M10 30h12v3h3v7H8v-7h2z"/>
+      <path fill="#ffcc9e" d="M8 37h4v4H8zm13 0h4v4h-4z"/>
+      <path fill="#eee5d9" d="M7 45h7v2H7zm11 0h7v2h-7z"/>
+    </g>
+  </defs>
+  <symbol id="male-walking" viewBox="0 0 32 52"><use href="#walking"/><use href="#face"/></symbol>
+  <symbol id="female-walking" viewBox="0 0 32 52"><use href="#walking"/><use href="#female"/></symbol>
+  <symbol id="male-sitting" viewBox="0 0 32 52"><use href="#sitting"/><use href="#face"/></symbol>
+  <symbol id="female-sitting" viewBox="0 0 32 52"><use href="#sitting"/><use href="#female"/></symbol>
+  <g id="shopping">
+    <use href="#walking"/>
+    <path fill="#34363d" d="M23 29h8v3h1v6h-8z"/>
+    <path fill="#bce2c8" d="M24 31h4v5h-4z"/>
+    <path fill="#ffcc9e" d="M28 32h3v4h-3z"/>
+    <path fill="#f1b565" d="M28 26h4v6h-4z"/>
+  </g>
+  <g id="reading">
+    <use href="#sitting"/>
+    <path fill="#78654f" d="M7 36h8v2h3v-2h8v8H7z"/>
+    <path fill="#fff1d5" d="M8 37h7v6H8zm10 0h7v6h-7z"/>
+    <path fill="#c5947f" d="M10 39h3v1h-3zm10 0h3v1h-3z"/>
+  </g>
+  <symbol id="male-shopping" viewBox="0 0 32 52"><use href="#shopping"/><use href="#face"/></symbol>
+  <symbol id="female-shopping" viewBox="0 0 32 52"><use href="#shopping"/><use href="#female"/></symbol>
+  <symbol id="male-reading" viewBox="0 0 32 52"><use href="#reading"/><use href="#face"/></symbol>
+  <symbol id="female-reading" viewBox="0 0 32 52"><use href="#reading"/><use href="#female"/></symbol>
+</svg>

@@ -1,17 +1,22 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { earningsAt, gameStart, gameTimeAt, mealPrice } from "./game-clock";
+import { earningsAt, gameStart, gameTimeAt, mealPrice, migrateElapsed } from "./game-clock";
 
 const saveKey = "pixel-city-life:game:v1";
-type Save = { startedAt: number; meals: number };
+type Save = { startedAt: number; meals: number; clockVersion: 2 };
 
-function readSave(): Save | null {
+function readSave(now = Date.now()): Save | null {
   try {
     const saved = JSON.parse(localStorage.getItem(saveKey) ?? "null");
     if (saved && Number.isFinite(saved.startedAt) && saved.startedAt > 0 &&
         Number.isSafeInteger(saved.meals) && saved.meals >= 0) {
-      return saved;
+      if (saved.clockVersion === 2) return saved;
+      return {
+        startedAt: now - migrateElapsed(now - saved.startedAt),
+        meals: saved.meals,
+        clockVersion: 2,
+      };
     }
   } catch {
     // The game can still run for the current visit without browser storage.
@@ -34,7 +39,7 @@ export default function useGame() {
   useEffect(() => {
     const started = window.setTimeout(() => {
       const currentTime = Date.now();
-      const current = readSave() ?? { startedAt: currentTime, meals: 0 };
+      const current = readSave(currentTime) ?? { startedAt: currentTime, meals: 0, clockVersion: 2 };
       writeSave(current);
       setSave(current);
       setNow(currentTime);

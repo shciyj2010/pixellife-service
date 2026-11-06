@@ -18,14 +18,14 @@
 }
 
 .header,
-.title,
+.statusBar,
 .dashboard,
 .actions {
   margin-inline: clamp(12px, 3vw, 24px);
 }
 
 .header,
-.title,
+.statusBar,
 .level,
 .balance {
   display: flex;
@@ -34,7 +34,7 @@
 }
 
 .header,
-.title {
+.statusBar {
   justify-content: space-between;
 }
 
@@ -57,7 +57,7 @@
 }
 
 .avatarToggle {
-  display: flex;
+  display: inline-flex;
   border: 1px solid #a2aaa1;
   white-space: nowrap;
 }
@@ -87,39 +87,27 @@
   color: #495752;
 }
 
-.title {
-  padding-block: 12px;
-  flex-wrap: wrap;
-}
-
-.title h1,
-.title p,
-.dashboard h2 {
+.header h1 {
   margin: 0;
-}
-
-.title h1 {
-  font-size: clamp(26px, 6vw, 44px);
+  font-size: clamp(20px, 5.5vw, 36px);
   line-height: 1.05;
   letter-spacing: -0.045em;
 }
 
-.title p {
-  color: #495752;
-  font-size: 0.85rem;
-}
-
-.title strong {
-  display: inline-block;
-  margin-left: 4px;
-  padding: 4px 7px;
-  color: #105a55;
+.statusBar {
+  margin-block: 8px 12px;
+  padding: 6px 8px;
+  flex-wrap: wrap;
   background: #dbe7db;
+  color: #105a55;
+  font-size: clamp(0.75rem, 3vw, 0.95rem);
+  font-variant-numeric: tabular-nums;
 }
 
 .scene {
   position: relative;
-  aspect-ratio: 3 / 1;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
   margin-inline: clamp(8px, 2vw, 16px);
   background: #d7ded4;
 }
@@ -159,8 +147,8 @@
 
 .dashboard {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 10px;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  gap: 6px;
   align-items: center;
   margin-bottom: 12px;
   padding: 9px 10px;
@@ -169,14 +157,16 @@
 }
 
 .dashboard h2 {
-  font-size: 1rem;
+  margin: 0;
+  font-size: clamp(0.75rem, 3vw, 0.95rem);
+  white-space: nowrap;
 }
 
 .dashboard progress {
   display: block;
   width: 100%;
   height: 8px;
-  margin-top: 5px;
+  margin: 0;
   accent-color: #126660;
 }
 
@@ -197,19 +187,36 @@
   padding-block: 12px;
 }
 
-.actions button,
+.actions {
+  align-items: center;
+}
+
+.frame .actions button {
+  min-height: 31px;
+  padding: 4px 8px;
+  border: 1px solid transparent;
+  background: #77273f;
+  color: #fffaf1;
+  font-size: 0.6rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.frame .actions button:last-child {
+  background: #105a55;
+}
+
+.frame .actions button:hover {
+  filter: brightness(1.15);
+}
+
 .dialog button {
   min-height: 44px;
   padding: 8px 12px;
   border: 0;
-  background: #77273f;
+  background: #105a55;
   color: #fffaf1;
   font-weight: 800;
-}
-
-.actions button:last-child,
-.dialog button {
-  background: #105a55;
 }
 
 .nav {
@@ -315,13 +322,6 @@
   flex-wrap: wrap;
 }
 
-.gameTime {
-  display: grid;
-  gap: 3px;
-  font-size: clamp(0.75rem, 3vw, 0.95rem);
-  text-align: center;
-}
-
 .dashboardRow {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -363,11 +363,38 @@
     grid-template-columns: 1fr;
   }
 
-  .gameTime {
-    order: 1;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-  }
+}
+
+.frame .sceneCharacter {
+  position: absolute;
+  left: 50%;
+  bottom: 13%;
+  width: 14%;
+  height: 35%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  shape-rendering: crispEdges;
+}
+
+.frame .sceneCharacter[data-scene="cafe"] {
+  left: 69%;
+  bottom: 14%;
+  height: 27%;
+}
+
+.frame .sceneCharacter[data-scene="office"] {
+  left: 48%;
+  bottom: 40%;
+  height: 29%;
+  clip-path: inset(0 0 19% 0);
+}
+
+.frame .sceneCharacter[data-scene="home"] {
+  bottom: 21%;
+  height: 28%;
+}
+
+.frame .sceneCharacter[data-scene="store"] {
+  left: 65%;
+  bottom: 12%;
 }
