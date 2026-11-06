@@ -243,8 +243,22 @@
   outline-offset: 2px;
 }
 
+.tabContent {
+  position: relative;
+}
+
+.homeContent {
+  display: flow-root;
+}
+
+.homeContent[inert] {
+  visibility: hidden;
+}
+
 .tabPanel {
-  min-height: 260px;
+  position: absolute;
+  inset: 0;
+  overflow: auto;
   padding: 8px 24px 24px;
 }
 

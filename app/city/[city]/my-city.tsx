@@ -88,8 +88,8 @@ export default function MyCity({ name, title, hasScenes }: { name: string; title
           {hasScenes && <p>현재 위치 <strong aria-live="polite">{scene.location}</strong></p>}
         </div>
 
-        {tab === "home" ? (
-          <>
+        <div className={styles.tabContent}>
+          <div className={styles.homeContent} inert={tab !== "home"}>
             <section className={styles.dashboard} aria-labelledby="house-goal">
               <Icon name="house" />
               <div>
@@ -126,15 +126,16 @@ export default function MyCity({ name, title, hasScenes }: { name: string; title
               <button type="button" onClick={() => openAction("earn")}>돈 벌기</button>
               <button type="button" onClick={() => openAction("spend")}>돈 쓰기</button>
             </div>
-          </>
-        ) : (
-          <section className={styles.tabPanel} aria-labelledby="tab-title">
-            <h2 id="tab-title">{menu.find((item) => item.id === tab)?.label}</h2>
-            {tab === "bank" && <p>보유 자산 <strong>{balance.toLocaleString("ko-KR")} 코인</strong></p>}
-            {tab === "bell" && <p>새 알림이 없어요.</p>}
-            {tab === "settings" && <Link href="/">도시 선택으로 돌아가기</Link>}
-          </section>
-        )}
+          </div>
+          {tab !== "home" && (
+            <section className={styles.tabPanel} aria-labelledby="tab-title">
+              <h2 id="tab-title">{menu.find((item) => item.id === tab)?.label}</h2>
+              {tab === "bank" && <p>보유 자산 <strong>{balance.toLocaleString("ko-KR")} 코인</strong></p>}
+              {tab === "bell" && <p>새 알림이 없어요.</p>}
+              {tab === "settings" && <Link href="/">도시 선택으로 돌아가기</Link>}
+            </section>
+          )}
+        </div>
 
         <nav className={styles.nav} aria-label="하단 메뉴">
           {menu.map((item) => (
