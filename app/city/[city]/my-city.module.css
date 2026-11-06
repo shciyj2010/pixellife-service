@@ -118,8 +118,8 @@
 
 .sceneSpeech {
   position: absolute;
-  right: clamp(8px, 2.4vw, 16px);
-  bottom: clamp(8px, 2.4vw, 16px);
+  top: clamp(8px, 2.4vw, 16px);
+  left: clamp(8px, 2.4vw, 16px);
   max-width: 82%;
   pointer-events: none;
 }
