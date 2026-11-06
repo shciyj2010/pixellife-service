@@ -8,10 +8,10 @@ export const gameStart = Date.UTC(2026, 10, 6, 18);
 const firstMonday = Date.UTC(2026, 10, 2);
 
 
-export const salary = 1800;
-export const bonus = 300;
-export const payday = 25;
-export const mealPrice = 100;
+export const salary = 300;
+export const bonus = 20;
+export const bonusHour = 10;
+export const legacyMealPrice = 100;
 
 export function gameTimeAt(elapsed: number, hoursPerWeekday = weekdayHours) {
   const weekdayTime = 5 * hoursPerWeekday * hour;
@@ -52,20 +52,29 @@ export function routineAt(time: number) {
   return { id: "rest", location: "집 · 휴식중", mission: null, scene: "home" } as const;
 }
 
-export function earningsAt(time: number) {
+export function earningsAt(time: number, policyStartsAfter = gameStart, bonusStartsAfter = gameStart) {
   const payments: { time: number; label: string; amount: number }[] = [];
-  let total = 0;
 
-  for (let paymentTime = gameStart + day; paymentTime <= time; paymentTime += day) {
-    const date = new Date(paymentTime);
-    const isPayday = date.getUTCDate() === payday;
-    const isBonusDay = date.getUTCDay() === 4;
-    if (isPayday) payments.push({ time: paymentTime, label: "월급", amount: salary });
-    if (isBonusDay) payments.push({ time: paymentTime, label: "목요일 보너스", amount: bonus });
-    total += (isPayday ? salary : 0) + (isBonusDay ? bonus : 0);
+  for (let midnight = gameStart + 6 * hour; midnight <= time; midnight += day) {
+    const date = new Date(midnight);
+    const weekday = date.getUTCDay();
+    const evening = midnight + 18 * hour;
+    const morning = midnight + bonusHour * hour;
+    const legacy = evening <= policyStartsAfter;
+    const lastDay = new Date(midnight + day).getUTCMonth() !== date.getUTCMonth();
+    if (morning > bonusStartsAfter && morning <= time && (weekday === 1 || weekday === 3 || weekday === 5)) {
+      payments.push({ time: morning, label: "보너스 도착! 🎁", amount: bonus });
+    }
+    if (evening > time) continue;
+    if (legacy ? date.getUTCDate() === 25 : lastDay) {
+      payments.push({ time: evening, label: "월급", amount: legacy ? 1800 : salary });
+    }
+    if (evening <= bonusStartsAfter && weekday === (legacy ? 4 : 5)) {
+      payments.push({ time: evening, label: legacy ? "목요일 보너스" : "금요일 보너스", amount: legacy ? 300 : 50 });
+    }
   }
 
-  return { total, recent: payments.slice(-8).reverse() };
+  return { total: payments.reduce((sum, payment) => sum + payment.amount, 0), payments };
 }
 
 export const gameDateFormat = new Intl.DateTimeFormat("ko-KR", {
@@ -73,13 +82,13 @@ export const gameDateFormat = new Intl.DateTimeFormat("ko-KR", {
 });
 
 export const gameHourFormat = new Intl.DateTimeFormat("ko-KR", {
-  timeZone: "UTC", hour: "numeric", minute: "2-digit", second: "2-digit", hour12: true,
+  timeZone: "UTC", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23",
 });
 
 
 const weekdayFormat = new Intl.DateTimeFormat("ko-KR", { timeZone: "UTC", weekday: "long" });
 
 export function gameBarDate(time: number) {
-  const date = new Date(time);
-  return `${date.getUTCFullYear()}/${String(date.getUTCMonth() + 1).padStart(2, "0")}/${weekdayFormat.format(time)}`;
+  const date = new Date(time).toISOString().slice(0, 10).replaceAll("-", "/");
+  return `${date}/${weekdayFormat.format(time)} ${gameHourFormat.format(time)}`;
 }

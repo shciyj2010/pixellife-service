@@ -124,8 +124,7 @@
   padding: 8px clamp(8px, 2vw, 16px) 12px;
 }
 
-.frame button,
-.dialog button {
+.frame button {
   cursor: pointer;
   font: inherit;
 }
@@ -197,8 +196,8 @@
   border: 1px solid transparent;
   background: #77273f;
   color: #fffaf1;
-  font-size: 0.6rem;
-  font-weight: 800;
+  font-size: 14px;
+  font-weight: 400;
   white-space: nowrap;
 }
 
@@ -208,15 +207,6 @@
 
 .frame .actions button:hover {
   filter: brightness(1.15);
-}
-
-.dialog button {
-  min-height: 44px;
-  padding: 8px 12px;
-  border: 0;
-  background: #105a55;
-  color: #fffaf1;
-  font-weight: 800;
 }
 
 .nav {
@@ -244,8 +234,7 @@
 }
 
 .frame button:focus-visible,
-.frame a:focus-visible,
-.dialog button:focus-visible {
+.frame a:focus-visible {
   outline: 2px solid #8b3550;
   outline-offset: 2px;
 }
@@ -273,25 +262,9 @@
   color: #105a55;
 }
 
-.dialog {
-  max-width: min(360px, 82vw);
-  border: 1px solid #a2aaa1;
-  padding: 20px;
-  background: #eef0e9;
-  color: inherit;
-}
-
-.dialog::backdrop {
-  background: #17272b88;
-}
-
-.dialog h2 {
-  margin: 0;
-}
-
-.dialog form {
-  display: flex;
-  gap: 8px;
+.noticeText {
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .breadcrumb {
@@ -345,17 +318,16 @@
   margin-inline: clamp(12px, 3vw, 24px);
 }
 
+.mission:empty {
+  min-height: 10px;
+}
+
 .mission button {
   padding: 7px 16px;
   border: 1px solid #105a55;
   background: #dbe7db;
   color: #104d49;
   font-weight: 800;
-}
-
-.dialog button:disabled {
-  opacity: 0.5;
-  cursor: default;
 }
 
 @media (max-width: 480px) {
@@ -397,4 +369,141 @@
 .frame .sceneCharacter[data-scene="store"] {
   left: 65%;
   bottom: 12%;
+}
+
+.bankCharts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.bankChart {
+  min-width: 0;
+  margin: 0;
+  padding: 8px;
+  border: 1px solid #a2aaa1;
+  font-size: 0.85rem;
+}
+
+.bankChart figcaption {
+  display: grid;
+  gap: 2px;
+}
+
+.bankChart strong {
+  color: #105a55;
+  overflow-wrap: anywhere;
+}
+
+.frame .bankChart svg {
+  display: block;
+  width: 100%;
+  height: 52px;
+}
+
+.bankTotals {
+  font-size: 0.85rem;
+}
+
+.bankModes,
+.bankActivities {
+  display: grid;
+  gap: 6px;
+  margin-block: 8px;
+}
+
+.bankModes {
+  grid-template-columns: 1fr 1fr;
+}
+
+.bankModes button,
+.bankActivities button {
+  min-height: 36px;
+  padding: 6px 8px;
+  border: 1px solid #a2aaa1;
+  background: #f7f8f3;
+  color: inherit;
+}
+
+.bankModes button[aria-pressed="true"] {
+  background: #105a55;
+  color: #fffaf1;
+}
+
+.bankActivities button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  text-align: left;
+}
+
+.bankActivities button span {
+  font-size: 0.85rem;
+}
+
+.frame button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.assetValue {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 8px;
+  margin-block: 8px;
+  padding: 8px;
+  border: 1px solid #a2aaa1;
+  font-size: 0.85rem;
+}
+
+.assetValue strong,
+.starterNotice dd {
+  color: #105a55;
+  font-weight: 800;
+}
+
+.cashTotals {
+  grid-column: 1 / -1;
+}
+
+.starterNotice {
+  box-sizing: border-box;
+  width: min(360px, calc(100% - 32px));
+  padding: 20px;
+  border: 1px solid #a2aaa1;
+  background: #eef0e9;
+  color: #17272b;
+}
+
+.starterNotice::backdrop {
+  background: #17272b88;
+}
+
+.starterNotice h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.starterNotice dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid #cbd2c9;
+}
+
+.starterNotice dd {
+  margin: 0;
+}
+
+.starterNotice button {
+  width: 100%;
+  min-height: 40px;
+  border: 0;
+  background: #105a55;
+  color: #fffaf1;
+  cursor: pointer;
+  font: inherit;
 }

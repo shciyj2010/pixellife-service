@@ -1,15 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { homeBreadcrumb } from "../../seo";
-import { bonus, gameBarDate, gameDateFormat, gameHourFormat, mealPrice, payday, routineAt, salary } from "./game-clock";
+import { gameBarDate, gameDateFormat, gameHourFormat, routineAt } from "./game-clock";
+import { activities, type ActivityId, type BankMode } from "./bank-activities";
+import { formatCells, investmentNotices, starterCash, starterHouse, starterStock } from "./asset-policy";
+import BankPanel from "./bank-panel";
 import useGame from "./use-game";
 import SceneArt from "./scene-art";
 import styles from "./my-city.module.css";
 
 const asset = "/my-city";
-const housePrice = 3000;
 const avatars = [
   { id: "female", label: "여자", icon: "avatar-female" },
   { id: "male", label: "남자", icon: "avatar" },
@@ -39,25 +41,62 @@ function Icon({ name }: { name: string }) {
   );
 }
 
+function StarterNotice({ onClose }: { onClose: () => void }) {
+  const dialog = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    if (dialog.current && !dialog.current.open) dialog.current.showModal();
+  }, []);
+
+  return (
+    <dialog ref={dialog} className={styles.starterNotice} aria-labelledby="starter-title" onClose={onClose}>
+      <h2 id="starter-title">픽셀 시티에 온 것을 환영해! 여기서는 뭐든 할 수 있어.</h2>
+      <p>넌 이미 부자야. (이건 농담😂) 이미 자가, 현금, 주식까지 있어! 하지만 열심히 모아서 다음 집으로 점프하자! 😘</p>
+      <dl>
+        <div><dt>현금</dt><dd>{formatCells(starterCash)}</dd></div>
+        <div><dt>주식</dt><dd>{formatCells(starterStock)}</dd></div>
+        <div><dt>기본 주택</dt><dd>{formatCells(starterHouse)}</dd></div>
+      </dl>
+      <form method="dialog">
+        <button type="submit">확인</button>
+      </form>
+    </dialog>
+  );
+}
+
 export default function MyCity({ name, title, hasScenes }: { name: string; title: string; hasScenes: boolean }) {
   const [avatar, setAvatar] = useState<(typeof avatars)[number]>(avatars[0]);
-  const { time, balance, earnings, spent, buyMeal } = useGame();
+  const game = useGame();
+  const { time, balance, active, payments, nextHousePrice, availableBalance } = game;
+  const activeActivity = active ? activities[active.id] : null;
   const routine = routineAt(time);
   const shift = `${Math.floor(time / 86_400_000)}:${routine.id}`;
   const [completedMission, setCompletedMission] = useState("");
   const [preview, setPreview] = useState<{ shift: string; scene: (typeof scenes)[number] } | null>(null);
-  const [purchaseMessage, setPurchaseMessage] = useState("");
-  const waitingForMission = Boolean(routine.mission && completedMission !== shift);
-  const routineScene = routine.scene;
-  const scene = preview?.shift === shift ? preview.scene : scenes.find((item) => item.id === routineScene)!;
+  const waitingForMission = !active && Boolean(routine.mission && completedMission !== shift);
+  const routineScene = activeActivity?.scene ?? routine.scene;
+  const currentScene = scenes.find((item) => item.id === routineScene)!;
+  const scene = activeActivity || preview?.shift !== shift ? currentScene : preview.scene;
   const [tab, setTab] = useState<(typeof menu)[number]["id"]>("home");
-  const [action, setAction] = useState<"earn" | "spend">("earn");
-  const dialog = useRef<HTMLDialogElement>(null);
+  const [bankMode, setBankMode] = useState<BankMode>("earn");
+  const [message, setMessage] = useState("");
+  const notices = tab === "bell" && game.ready
+    ? [...payments, ...investmentNotices(time, game.starterGrantedAt, game.houses)].sort((a, b) => b.time - a.time)
+    : [];
 
-  function openAction(nextAction: typeof action) {
-    setAction(nextAction);
-    setPurchaseMessage("");
-    dialog.current?.showModal();
+  function openBank(mode: BankMode) {
+    setBankMode(mode);
+    setMessage("");
+    setTab("bank");
+  }
+
+  async function startActivity(id: ActivityId) {
+    const error = await game.startActivity(id);
+    setMessage(error ?? "");
+    if (!error) {
+      setPreview(null);
+      setTab("home");
+    }
   }
 
   return (
@@ -77,15 +116,15 @@ export default function MyCity({ name, title, hasScenes }: { name: string; title
           </div>
           <div className={styles.balance}>
             <Icon name="coin" />
-            <strong aria-label={`보유 자산 ${balance.toLocaleString("ko-KR")} 원`}>{balance.toLocaleString("ko-KR")}</strong>
+            <strong aria-label={`보유 현금 ${formatCells(balance)}`}>{formatCells(balance)}</strong>
           </div>
         </header>
 
         <div className={styles.statusBar}>
           <time dateTime={new Date(time).toISOString().slice(0, 19)} title={gameDateFormat.format(time)}>
-            {gameBarDate(time)} {gameHourFormat.format(time)}
+            {gameBarDate(time)}
           </time>
-          <strong aria-live="polite">{routine.location}</strong>
+          <strong aria-live="polite">{activeActivity?.location ?? routine.location}</strong>
         </div>
 
         <div className={styles.tabContent}>
@@ -94,15 +133,22 @@ export default function MyCity({ name, title, hasScenes }: { name: string; title
               <section className={styles.dashboard} aria-labelledby="house-goal">
                 <h2 id="house-goal">다음 집</h2>
                 <Icon name="house" />
-                <progress aria-labelledby="house-goal" value={Math.min(balance, housePrice)} max={housePrice} />
-                <strong>{balance.toLocaleString("ko-KR")} / {housePrice.toLocaleString("ko-KR")}</strong>
+                {nextHousePrice === null ? (
+                  <strong>최고 단계 달성</strong>
+                ) : (
+                  <>
+                    <progress aria-labelledby="house-goal" value={Math.min(availableBalance, nextHousePrice)} max={nextHousePrice} />
+                    <strong>{formatCells(Math.max(0, nextHousePrice - availableBalance))} 남음</strong>
+                  </>
+                )}
               </section>
               <div className={styles.actions}>
-                <button type="button" onClick={() => openAction("earn")}>돈 벌기</button>
-                <button type="button" onClick={() => openAction("spend")}>돈 쓰기</button>
+                <button type="button" onClick={() => openBank("earn")}>돈 벌기</button>
+                <button type="button" onClick={() => openBank("spend")}>돈 쓰기</button>
               </div>
             </div>
             <div className={styles.mission}>
+              {active && <small>{gameHourFormat.format(active.endsAt)} 종료</small>}
               {waitingForMission && (
                 <button type="button" onClick={() => { setPreview(null); setCompletedMission(shift); }}>
                   {routine.mission}
@@ -113,14 +159,14 @@ export default function MyCity({ name, title, hasScenes }: { name: string; title
             {hasScenes ? (
               <>
                 <SceneArt
-                  scene={scene}
+                  scene={active?.id === "cafe" ? { ...scene, pose: "sitting" } : scene}
                   hour={new Date(time).getUTCHours()}
                   avatar={avatar}
                   occupied={scene.id === routineScene}
                 />
                 <div className={styles.scenePicker} role="group" aria-label="장면 선택">
                   {scenes.map((item) => (
-                    <button key={item.id} type="button" aria-pressed={scene.id === item.id} onClick={() => setPreview({ shift, scene: item })}>
+                    <button key={item.id} type="button" aria-pressed={scene.id === item.id} disabled={Boolean(active)} onClick={() => setPreview({ shift, scene: item })}>
                       {item.label}
                     </button>
                   ))}
@@ -135,20 +181,20 @@ export default function MyCity({ name, title, hasScenes }: { name: string; title
             <section className={styles.tabPanel} aria-labelledby="tab-title">
               <h2 id="tab-title">{menu.find((item) => item.id === tab)?.label}</h2>
               {tab === "bank" && (
-                <>
-                  <p>보유 자산 <strong>{balance.toLocaleString("ko-KR")}원</strong></p>
-                  <p>누적 수입 {earnings.total.toLocaleString("ko-KR")}원 · 누적 지출 {spent.toLocaleString("ko-KR")}원</p>
-                </>
+                <BankPanel game={game} mode={bankMode} setMode={(mode) => { setBankMode(mode); setMessage(""); }}
+                  onStart={startActivity} onBuyHouse={async () => {
+                    setMessage(await game.buyHouse(game.houseStage) ?? "집을 구매했어요.");
+                  }} message={message} />
               )}
-              {tab === "bell" && (earnings.recent.length ? (
-                <ul>
-                  {earnings.recent.map((payment) => (
+              {tab === "bell" && (notices.length ? (
+                <ul className={styles.noticeText}>
+                  {notices.map((payment) => (
                     <li key={`${payment.time}:${payment.label}`}>
-                      {gameDateFormat.format(payment.time)} · {payment.label} +{payment.amount.toLocaleString("ko-KR")}원
+                      {gameBarDate(payment.time)} · {payment.label} {payment.amount > 0 ? "+" : ""}{formatCells(payment.amount)}
                     </li>
                   ))}
                 </ul>
-              ) : <p>새 알림이 없어요.</p>)}
+              ) : <p className={styles.noticeText}>아직 소식이 없어. 새 소식이 오면 알려줄게! ✨</p>)}
               {tab === "settings" && (
                 <>
                   <p>캐릭터 선택</p>
@@ -180,24 +226,7 @@ export default function MyCity({ name, title, hasScenes }: { name: string; title
           ))}
         </nav>
       </section>
-
-      <dialog className={styles.dialog} ref={dialog} aria-labelledby="action-title">
-        <h2 id="action-title">{action === "earn" ? "돈 벌기" : "돈 쓰기"}</h2>
-        {action === "earn" ? (
-          <p>평일 오전 8시에 일을 시작해 오후 6시에 마쳐요. 매월 {payday}일 월급 {salary.toLocaleString("ko-KR")}원, 매주 목요일 보너스 {bonus.toLocaleString("ko-KR")}원이 오후 6시에 들어와요.</p>
-        ) : (
-          <p>식사를 구매하면 자산에서 {mealPrice.toLocaleString("ko-KR")}원이 빠져요.</p>
-        )}
-        {purchaseMessage && <p role="status">{purchaseMessage}</p>}
-        <form method="dialog">
-          {action === "spend" && (
-            <button type="button" disabled={balance < mealPrice} onClick={async () => {
-              setPurchaseMessage(await buyMeal() ? "식사를 구매했어요." : "잔액이 부족해요.");
-            }}>식사 구매</button>
-          )}
-          <button>닫기</button>
-        </form>
-      </dialog>
+      {game.showStarterNotice && <StarterNotice onClose={() => { void game.acknowledgeStarterNotice(); }} />}
     </main>
   );
 }
