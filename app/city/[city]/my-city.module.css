@@ -272,3 +272,22 @@
   display: flex;
   gap: 8px;
 }
+
+.breadcrumb {
+  margin-inline: clamp(12px, 3vw, 24px);
+  padding-top: 10px;
+  color: #495752;
+  font-size: 0.8rem;
+}
+
+.breadcrumb ol {
+  display: flex;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.breadcrumb a {
+  color: #105a55;
+}

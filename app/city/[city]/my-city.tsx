@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRef, useState } from "react";
+import { homeBreadcrumb } from "../../seo";
 import styles from "./my-city.module.css";
 
 const asset = "/my-city";
@@ -13,11 +14,11 @@ const avatars = [
   { id: "male", label: "남자", icon: "avatar" },
 ] as const;
 const scenes = [
-  { id: "street", label: "도시 거리", location: "출근중" },
-  { id: "office", label: "사무실", location: "회사" },
-  { id: "return", label: "퇴근길", location: "퇴근중" },
-  { id: "home", label: "집 안", location: "집" },
-  { id: "park", label: "동네 공원", location: "퇴근중" },
+  { id: "street", label: "도시 거리", location: "출근중", alt: "남산서울타워가 보이는 골목에서 출근하는" },
+  { id: "office", label: "사무실", location: "회사", alt: "서울이 보이는 사무실에서 고양이 두 마리와 일하는" },
+  { id: "return", label: "퇴근길", location: "퇴근중", alt: "노을이 물든 서울 골목에서 퇴근하는" },
+  { id: "home", label: "집 안", location: "집", alt: "서울 풍경이 보이는 거실에서 고양이 두 마리와 쉬는" },
+  { id: "park", label: "동네 공원", location: "퇴근중", alt: "꽃이 핀 서울 공원을 산책하는" },
 ] as const;
 
 const menu = [
@@ -35,14 +36,15 @@ function Icon({ name }: { name: string }) {
   );
 }
 
-export default function MyCity({ city, name, title }: { city: string; name: string; title: string }) {
+export default function MyCity({ name, title, hasScenes }: { name: string; title: string; hasScenes: boolean }) {
   const [avatar, setAvatar] = useState<(typeof avatars)[number]>(avatars[1]);
   const [scene, setScene] = useState<(typeof scenes)[number]>(scenes[0]);
   const [tab, setTab] = useState<(typeof menu)[number]["id"]>("home");
   const [action, setAction] = useState<"earn" | "spend">("earn");
   const dialog = useRef<HTMLDialogElement>(null);
-  const hasScenes = city === "seoul";
   const isOffice = scene.id === "office";
+  const sceneImage = isOffice ? "office-v2" : `seoul-${scene.id}`;
+  const avatarSuffix = avatar.id === "female" ? "-female" : "";
 
   function openAction(nextAction: typeof action) {
     setAction(nextAction);
@@ -52,6 +54,12 @@ export default function MyCity({ city, name, title }: { city: string; name: stri
   return (
     <main className={styles.page}>
       <section className={styles.frame} aria-label={name + " 나의 도시"}>
+        <nav className={styles.breadcrumb} aria-label="현재 페이지 경로">
+          <ol>
+            <li><Link href={homeBreadcrumb.path}>{homeBreadcrumb.name}</Link></li>
+            <li aria-current="page"><span aria-hidden="true">›</span> {name}</li>
+          </ol>
+        </nav>
         <header className={styles.header}>
           <div className={styles.level}>
             <Icon name={avatar.icon} />
@@ -95,8 +103,8 @@ export default function MyCity({ city, name, title }: { city: string; name: stri
               <>
                 <div className={styles.scene}>
                   <Image
-                    src={isOffice ? asset + "/office-v2.png" : `${asset}/seoul-${scene.id}.png`}
-                    alt={isOffice ? "서울이 보이는 사무실에서 일하는 캐릭터와 고양이 두 마리" : `${name} ${scene.label} 픽셀 아트`}
+                    src={`${asset}/${sceneImage}${avatarSuffix}.png`}
+                    alt={`${scene.alt} ${avatar.label} 캐릭터의 픽셀 아트`}
                     fill
                     sizes="(max-width: 720px) 100vw, 680px"
                     unoptimized={isOffice}

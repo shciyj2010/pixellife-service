@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
+import { siteUrl } from "./seo";
 
 export const metadata: Metadata = {
-  title: "Pixel City Life",
-  description: "세계 도시를 여행하며 차근차근 자산을 키우는 픽셀 아트 시뮬레이션 게임",
+  metadataBase: siteUrl,
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
