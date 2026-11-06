@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const siteUrl = new URL("https://www.pixel-city.life");
-export const siteName = "Pixel City Life";
-export const siteDescription = "서울에서 첫 월급을 받고 주식과 부동산으로 자산을 키우는 픽셀 아트 도시 생활 시뮬레이션 게임입니다.";
+export const siteName = "픽셀 씨티 라이프";
+export const siteDescription = "집값 고공행진에 박탈감을 느끼며 만든, 그냥 돈이 생기는 세상 '픽셀 씨티'야!";
 export const homeBreadcrumb = { name: "도시 선택", path: "/" };
 
 export const shareImage = {

@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import type { CityId } from "../../cities";
 import { homeBreadcrumb } from "../../seo";
-import { gameBarDate, gameDateFormat, gameHourFormat, routineAt } from "./game-clock";
+import { gameBarDate, gameDateFormat, gameHourFormat } from "./game-clock";
 import { activities, type ActivityId, type BankMode } from "./bank-activities";
 import { formatCells, investmentNotices, starterCash, starterHouse, starterStock } from "./asset-policy";
 import BankPanel from "./bank-panel";
@@ -32,6 +33,23 @@ const menu = [
   { id: "bell", label: "알림" },
   { id: "settings", label: "설정" },
 ] as const;
+
+const routineBubbles = {
+  commute: "몸은 출근 중, 마음은 이불 속 🥱",
+  work: "출근했어 😭",
+  leave: "퇴근할래 😍",
+  rest: "집이다! 양말부터 벗자 🧦",
+  sleep: "내일의 나야, 잘 부탁해 😴",
+  park: "오늘 일정은 광합성이야 🌿",
+  coffee: null,
+} as const;
+
+const activityBubbles: Record<ActivityId, string> = {
+  overtime: "사무실 불, 내가 끄고 간다 💡",
+  cafe: "어서 오세요, 라떼는 제가 쏠 뻔했어요 ☕",
+  storeShift: "삑! 오늘도 셀 모으는 중 🧾",
+  store: "과자 하나만… 진짜 하나만 🍪",
+};
 
 function Icon({ name }: { name: string }) {
   return (
@@ -64,39 +82,37 @@ function StarterNotice({ onClose }: { onClose: () => void }) {
   );
 }
 
-export default function MyCity({ name, title, hasScenes }: { name: string; title: string; hasScenes: boolean }) {
-  const [avatar, setAvatar] = useState<(typeof avatars)[number]>(avatars[0]);
-  const game = useGame();
-  const { time, balance, active, payments, nextHousePrice, availableBalance } = game;
+export default function MyCity({ city, name, title, hasScenes }: { city: CityId; name: string; title: string; hasScenes: boolean }) {
+  const game = useGame(city);
+  const avatar = avatars.find((item) => item.id === game.avatar)!;
+  const { tab, bankMode, preview } = game.view;
+  const { time, routine, balance, active, payments, nextHousePrice, availableBalance } = game;
   const activeActivity = active ? activities[active.id] : null;
-  const routine = routineAt(time);
+  const atWork = routine.id === "work";
   const shift = `${Math.floor(time / 86_400_000)}:${routine.id}`;
-  const [completedMission, setCompletedMission] = useState("");
-  const [preview, setPreview] = useState<{ shift: string; scene: (typeof scenes)[number] } | null>(null);
-  const waitingForMission = !active && Boolean(routine.mission && completedMission !== shift);
+  const waitingForMission = !active && Boolean(routine.mission && !game.missions.includes(shift));
   const routineScene = activeActivity?.scene ?? routine.scene;
   const currentScene = scenes.find((item) => item.id === routineScene)!;
-  const scene = activeActivity || preview?.shift !== shift ? currentScene : preview.scene;
-  const [tab, setTab] = useState<(typeof menu)[number]["id"]>("home");
-  const [bankMode, setBankMode] = useState<BankMode>("earn");
+  const previewScene = !activeActivity && !atWork && preview?.shift === shift
+    ? scenes.find((item) => item.id === preview.scene)
+    : null;
+  const scene = previewScene ?? currentScene;
+  const bubble = game.ready && scene.id === routineScene
+    ? active ? activityBubbles[active.id] : routineBubbles[routine.id]
+    : null;
   const [message, setMessage] = useState("");
   const notices = tab === "bell" && game.ready
     ? [...payments, ...investmentNotices(time, game.starterGrantedAt, game.houses)].sort((a, b) => b.time - a.time)
     : [];
 
   function openBank(mode: BankMode) {
-    setBankMode(mode);
     setMessage("");
-    setTab("bank");
+    void game.setView({ tab: "bank", bankMode: mode });
   }
 
   async function startActivity(id: ActivityId) {
     const error = await game.startActivity(id);
     setMessage(error ?? "");
-    if (!error) {
-      setPreview(null);
-      setTab("home");
-    }
   }
 
   return (
@@ -150,7 +166,7 @@ export default function MyCity({ name, title, hasScenes }: { name: string; title
             <div className={styles.mission}>
               {active && <small>{gameHourFormat.format(active.endsAt)} 종료</small>}
               {waitingForMission && (
-                <button type="button" onClick={() => { setPreview(null); setCompletedMission(shift); }}>
+                <button type="button" onClick={() => { void game.completeMission(shift); }}>
                   {routine.mission}
                 </button>
               )}
@@ -163,10 +179,13 @@ export default function MyCity({ name, title, hasScenes }: { name: string; title
                   hour={new Date(time).getUTCHours()}
                   avatar={avatar}
                   occupied={scene.id === routineScene}
+                  bubble={bubble}
                 />
                 <div className={styles.scenePicker} role="group" aria-label="장면 선택">
                   {scenes.map((item) => (
-                    <button key={item.id} type="button" aria-pressed={scene.id === item.id} disabled={Boolean(active)} onClick={() => setPreview({ shift, scene: item })}>
+                    <button key={item.id} type="button" aria-pressed={scene.id === item.id}
+                      disabled={Boolean(active) || (atWork && item.id !== "office")}
+                      onClick={() => { void game.setView({ preview: { shift, scene: item.id } }); }}>
                       {item.label}
                     </button>
                   ))}
@@ -181,7 +200,7 @@ export default function MyCity({ name, title, hasScenes }: { name: string; title
             <section className={styles.tabPanel} aria-labelledby="tab-title">
               <h2 id="tab-title">{menu.find((item) => item.id === tab)?.label}</h2>
               {tab === "bank" && (
-                <BankPanel game={game} mode={bankMode} setMode={(mode) => { setBankMode(mode); setMessage(""); }}
+                <BankPanel game={game} mode={bankMode} setMode={(mode) => { void game.setView({ bankMode: mode }); setMessage(""); }}
                   onStart={startActivity} onBuyHouse={async () => {
                     setMessage(await game.buyHouse(game.houseStage) ?? "집을 구매했어요.");
                   }} message={message} />
@@ -204,7 +223,7 @@ export default function MyCity({ name, title, hasScenes }: { name: string; title
                         key={option.id}
                         type="button"
                         aria-pressed={avatar.id === option.id}
-                        onClick={() => setAvatar(option)}
+                        onClick={() => { void game.setAvatar(option.id); }}
                       >
                         {option.label}
                       </button>
@@ -219,7 +238,7 @@ export default function MyCity({ name, title, hasScenes }: { name: string; title
 
         <nav className={styles.nav} aria-label="하단 메뉴">
           {menu.map((item) => (
-            <button key={item.id} type="button" aria-pressed={tab === item.id} onClick={() => setTab(item.id)}>
+            <button key={item.id} type="button" aria-pressed={tab === item.id} onClick={() => { void game.setView({ tab: item.id }); }}>
               <Icon name={item.id} />
               {item.label}
             </button>

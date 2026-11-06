@@ -104,12 +104,46 @@
   font-variant-numeric: tabular-nums;
 }
 
+.sceneFrame {
+  position: relative;
+  margin-inline: clamp(8px, 2vw, 16px);
+}
+
 .scene {
   position: relative;
   aspect-ratio: 3 / 2;
   overflow: hidden;
-  margin-inline: clamp(8px, 2vw, 16px);
   background: #d7ded4;
+}
+
+.sceneSpeech {
+  position: absolute;
+  right: clamp(8px, 2.4vw, 16px);
+  bottom: clamp(8px, 2.4vw, 16px);
+  max-width: 82%;
+  pointer-events: none;
+}
+
+.sceneBubble {
+  display: block;
+  padding: 6px 10px;
+  border: 2px solid #435652;
+  border-radius: 3px;
+  background: #fff5dd;
+  color: #253d38;
+  box-shadow: 3px 3px #43565280;
+  font-size: clamp(12px, 3.5vw, 14px);
+  font-weight: 700;
+  animation: sceneBubbleIn 180ms ease-out;
+}
+
+@keyframes sceneBubbleIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sceneBubble { animation: none; }
 }
 
 .scene img {

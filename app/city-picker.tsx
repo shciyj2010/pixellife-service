@@ -2,8 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
+import type { CityId } from "./cities";
+import { readSave } from "./city/[city]/use-game";
 import styles from "./city-select.module.css";
 
 const asset = "/city-select";
@@ -18,7 +20,19 @@ const slots = [styles.primary, styles.upper, styles.lower];
 export default function CityPicker() {
   const cityButtons = useRef<(HTMLButtonElement | null)[]>([]);
   const [order, setOrder] = useState([0, 1, 2]);
+  const [lastCity, setLastCity] = useState<CityId | null>(null);
   const selected = cities[order[0]];
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const city = readSave()?.lastCity;
+      const index = cities.findIndex((entry) => entry.id === city);
+      if (!city || index < 0) return;
+      setLastCity(city);
+      setOrder([index, (index + 1) % cities.length, (index + 2) % cities.length]);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   function selectCity(index: number) {
     if (index === 0) return;
@@ -107,7 +121,7 @@ export default function CityPicker() {
           })}
         </div>
         <Link href={`/city/${selected.id}`} className={styles.start}>
-          {selected.name}에서 시작 <span className={styles.arrow} aria-hidden="true" />
+          {selected.name}에서 {lastCity === selected.id ? "이어 하기" : "시작"} <span className={styles.arrow} aria-hidden="true" />
         </Link>
       </section>
     </main>

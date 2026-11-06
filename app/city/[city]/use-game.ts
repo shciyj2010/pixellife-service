@@ -1,11 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { earningsAt, gameStart, gameTimeAt, legacyMealPrice, migrateElapsed } from "./game-clock";
-import { activities, activityPayments, gameHour, housePrices, type Activity, type ActivityId } from "./bank-activities";
-
+import { useEffect, useMemo, useRef, useState } from "react";
+import { cities, type CityId } from "../../cities";
+import { earningsAt, gameStart, gameTimeAt, legacyMealPrice, migrateElapsed, routineAt } from "./game-clock";
+import { activities, activityPayments, gameHour, housePrices, type Activity, type ActivityId, type BankMode } from "./bank-activities";
 import { gameWeek, portfolioAt, starterCash } from "./asset-policy";
 
+const tabs = ["home", "bank", "bell", "settings"] as const;
+export type CityTab = (typeof tabs)[number];
+export type AvatarId = "female" | "male";
+type CityView = { tab: CityTab; bankMode: BankMode; preview: { shift: string; scene: string } | null };
+
+const defaultView: CityView = { tab: "home", bankMode: "earn", preview: null };
 const saveKey = "pixel-city-life:game:v1";
 type Save = {
   startedAt: number;
@@ -17,11 +23,15 @@ type Save = {
   bonusStartsAfter: number;
   starterGrantedAt: number;
   starterNoticeSeen: boolean;
+  lastCity: CityId | null;
+  avatar: AvatarId;
+  missions: string[];
+  views: Partial<Record<CityId, CityView>>;
 };
 
 const legacyActivityAmounts = { overtime: 400, cafe: 300, store: -100, storeShift: 100 };
 
-function readSave(now = Date.now()): Save | null {
+export function readSave(now = Date.now()): Save | null {
   try {
     const saved = JSON.parse(localStorage.getItem(saveKey) ?? "null");
     if (saved && Number.isFinite(saved.startedAt) && saved.startedAt > 0 &&
@@ -38,6 +48,17 @@ function readSave(now = Date.now()): Save | null {
       const houses = Array.isArray(saved.houses)
         ? saved.houses.filter(Number.isSafeInteger).slice(0, housePrices.length) as number[]
         : [];
+      const views: Save["views"] = {};
+      for (const city of Object.keys(cities) as CityId[]) {
+        const view = saved.views?.[city];
+        if (!view) continue;
+        views[city] = {
+          tab: tabs.includes(view.tab) ? view.tab : defaultView.tab,
+          bankMode: view.bankMode === "spend" ? "spend" : "earn",
+          preview: typeof view.preview?.shift === "string" && typeof view.preview?.scene === "string"
+            ? { shift: view.preview.shift, scene: view.preview.scene } : null,
+        };
+      }
       return {
         startedAt,
         meals: saved.meals,
@@ -51,6 +72,10 @@ function readSave(now = Date.now()): Save | null {
         starterGrantedAt: Number.isSafeInteger(saved.starterGrantedAt)
           ? saved.starterGrantedAt : gameTimeAt(now - startedAt),
         starterNoticeSeen: saved.starterNoticeSeen === true,
+        lastCity: typeof saved.lastCity === "string" && Object.hasOwn(cities, saved.lastCity) ? saved.lastCity : null,
+        avatar: saved.avatar === "male" ? "male" : "female",
+        missions: Array.isArray(saved.missions) ? saved.missions.filter((id: unknown) => typeof id === "string") : [],
+        views,
       };
     }
   } catch {
@@ -79,33 +104,68 @@ function writeSave(save: Save) {
   }
 }
 
-export default function useGame() {
+function withSaveLock<T>(action: () => T): Promise<T> {
+  return navigator.locks ? navigator.locks.request(saveKey, action) : Promise.resolve(action());
+}
+
+function balanceAt(save: Save, time: number) {
+  return earningsAt(time, save.policyStartsAfter, save.bonusStartsAfter).total - save.meals * legacyMealPrice
+    + playerPayments(save, time).reduce((sum, payment) => sum + payment.amount, 0);
+}
+
+export default function useGame(city: CityId) {
   const [save, setSave] = useState<Save | null>(null);
   const [now, setNow] = useState(0);
 
+  const latestSave = useRef<Save | null>(null);
+
   useEffect(() => {
-    const started = window.setTimeout(() => {
+    let cancelled = false;
+    void withSaveLock(() => {
+      if (cancelled) return;
       const currentTime = Date.now();
-      const current = readSave(currentTime) ?? { startedAt: currentTime, meals: 0, clockVersion: 2, history: [], houses: [], policyStartsAfter: gameStart, bonusStartsAfter: gameStart, starterGrantedAt: gameStart, starterNoticeSeen: false };
-      writeSave(current);
-      setSave(current);
+      const current = readSave(currentTime) ?? latestSave.current ?? {
+        startedAt: currentTime,
+        meals: 0,
+        clockVersion: 2,
+        history: [],
+        houses: [],
+        policyStartsAfter: gameStart,
+        bonusStartsAfter: gameStart,
+        starterGrantedAt: gameStart,
+        starterNoticeSeen: false,
+        avatar: "female",
+        missions: [],
+        views: {},
+      };
+      const updated: Save = { ...current, lastCity: city };
+      writeSave(updated);
+      latestSave.current = updated;
+      setSave(updated);
       setNow(currentTime);
-    }, 0);
+    });
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
 
     function syncSave(event: StorageEvent) {
-      if (event.key === saveKey) setSave(readSave());
+      if (event.key !== saveKey) return;
+      const currentTime = Date.now();
+      const current = readSave(currentTime);
+      if (!current) return;
+      latestSave.current = current;
+      setSave(current);
+      setNow(currentTime);
     }
 
     window.addEventListener("storage", syncSave);
     return () => {
-      window.clearTimeout(started);
+      cancelled = true;
       window.clearInterval(timer);
       window.removeEventListener("storage", syncSave);
     };
-  }, []);
+  }, [city]);
 
   const time = save ? gameTimeAt(now - save.startedAt) : gameStart;
+  const routine = routineAt(time);
   const paymentHour = Math.floor(time / gameHour) * gameHour;
   const policyStartsAfter = save?.policyStartsAfter;
   const bonusStartsAfter = save?.bonusStartsAfter;
@@ -120,41 +180,66 @@ export default function useGame() {
   const houseStage = save?.houses.length ?? 0;
   const nextHousePrice = housePrices[houseStage] ?? null;
 
-  async function updateSave(update: (current: Save, time: number, balance: number) => Save | string) {
+  async function updateSave(update: (current: Save, time: number) => Save | string) {
     function applyUpdate() {
       const currentTime = Date.now();
-      const current = readSave(currentTime) ?? save;
+      const current = readSave(currentTime) ?? latestSave.current;
       if (!current) return "게임을 불러오는 중이에요.";
       const gameTime = gameTimeAt(currentTime - current.startedAt);
-      const currentBalance = earningsAt(gameTime, current.policyStartsAfter, current.bonusStartsAfter).total - current.meals * legacyMealPrice
-        + playerPayments(current, gameTime).reduce((sum, payment) => sum + payment.amount, 0);
-      const updated = update(current, gameTime, currentBalance);
+      const updated = update(current, gameTime);
       if (typeof updated === "string") return updated;
       writeSave(updated);
+      latestSave.current = updated;
       setSave(updated);
       setNow(currentTime);
       return null;
     }
 
-    return navigator.locks ? navigator.locks.request(saveKey, applyUpdate) : applyUpdate();
+    return withSaveLock(applyUpdate);
   }
 
   function startActivity(id: ActivityId) {
-    return updateSave((current, gameTime, currentBalance) => {
+    return updateSave((current, gameTime) => {
       if (current.history.some(({ endsAt }) => endsAt > gameTime)) return "이미 진행 중인 활동이 있어요.";
+      if (routineAt(gameTime).id === "work" && activities[id].scene !== "office") {
+        return "지금은 회사에 있을 시간이야. 퇴근하고 가자! 💼";
+      }
       const { amount, hours } = activities[id];
-      if (amount < 0 && currentBalance + amount < 0) return "잔액이 부족해요.";
-      return { ...current, history: [...current.history, { id, endsAt: gameTime + hours * gameHour, amount }] };
+      if (amount < 0 && balanceAt(current, gameTime) + amount < 0) return "잔액이 부족해요.";
+      return {
+        ...current,
+        history: [...current.history, { id, endsAt: gameTime + hours * gameHour, amount }],
+        views: cityViews(current, { tab: "home", preview: null }),
+      };
     });
   }
 
   function buyHouse(expectedStage: number) {
-    return updateSave((current, gameTime, currentBalance) => {
+    return updateSave((current, gameTime) => {
       const price = housePrices[current.houses.length];
       if (price === undefined || current.houses.length !== expectedStage) return "주택 목표가 바뀌었어요.";
       const reserved = current.history.find(({ endsAt }) => endsAt > gameTime)?.amount ?? 0;
-      if (currentBalance + Math.min(0, reserved) < price) return "사용할 수 있는 잔액이 부족해요.";
+      if (balanceAt(current, gameTime) + Math.min(0, reserved) < price) return "사용할 수 있는 잔액이 부족해요.";
       return { ...current, houses: [...current.houses, gameTime] };
+    });
+  }
+
+  function cityViews(current: Save, patch: Partial<CityView>) {
+    return { ...current.views, [city]: { ...defaultView, ...current.views[city], ...patch } };
+  }
+
+  function setView(patch: Partial<CityView>) {
+    return updateSave((current) => ({ ...current, views: cityViews(current, patch) }));
+  }
+
+  function setAvatar(avatar: AvatarId) {
+    return updateSave((current) => ({ ...current, avatar }));
+  }
+
+  function completeMission(shift: string) {
+    return updateSave((current) => {
+      if (current.missions.includes(shift)) return current;
+      return { ...current, missions: [...current.missions, shift], views: cityViews(current, { preview: null }) };
     });
   }
 
@@ -173,7 +258,8 @@ export default function useGame() {
   });
 
   const availableBalance = balance + Math.min(0, active?.amount ?? 0);
-  return { time, active, payments, income, spent, balance, availableBalance, houseStage, nextHousePrice,
+  return { time, routine, active, payments, income, spent, balance, availableBalance, houseStage, nextHousePrice,
     startActivity, buyHouse, ready: save !== null, stockValue, houseValue, assetHistory,
-    starterGrantedAt, houses, showStarterNotice: save !== null && !save.starterNoticeSeen, acknowledgeStarterNotice };
+    view: save?.views[city] ?? defaultView, avatar: save?.avatar ?? "female", missions: save?.missions ?? [],
+    setView, setAvatar, completeMission, starterGrantedAt, houses, showStarterNotice: save !== null && !save.starterNoticeSeen, acknowledgeStarterNotice };
 }

@@ -60,11 +60,13 @@ export default function BankPanel({ game, mode, setMode, onStart, onBuyHouse, me
       </div>
       {mode === "earn" && <p className={styles.bankTotals}>매월 말일 18:00 월급 +{formatCells(salary)} · 월·수·금 {bonusHour}:00 보너스 +{formatCells(bonus)}</p>}
       {game.active && <p role="status">{activities[game.active.id].location} · {gameHourFormat.format(game.active.endsAt)} 종료</p>}
+      {game.routine.id === "work" && <p className={styles.bankTotals}>지금은 회사에 있을 시간이야. 다른 곳은 퇴근하고 가자! 💼</p>}
       <div className={styles.bankActivities}>
         {choices[mode].map((id) => {
-          const { label, amount, hours } = activities[id];
+          const { label, amount, hours, scene } = activities[id];
+          const lockedAtWork = game.routine.id === "work" && scene !== "office";
           return (
-            <button key={id} type="button" disabled={!game.ready || Boolean(game.active) || game.balance + amount < 0}
+            <button key={id} type="button" disabled={!game.ready || Boolean(game.active) || lockedAtWork || game.balance + amount < 0}
               onClick={() => onStart(id)}>
               <strong>{label}</strong>
               <span>게임 시간 {hours}시간 · {amount > 0 ? "+" : "−"}{formatCells(Math.abs(amount))}</span>

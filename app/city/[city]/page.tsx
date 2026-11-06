@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { cities } from "../../cities";
+import { cities, type CityId } from "../../cities";
 import JsonLd from "../../json-ld";
 import { absoluteUrl, homeBreadcrumb, pageMetadata, siteName } from "../../seo";
 import MyCity from "./my-city";
@@ -17,8 +17,8 @@ function getCity(slug: string) {
 export async function generateMetadata({ params }: PageProps<"/city/[city]">): Promise<Metadata> {
   const { city } = await params;
   const { name, hasScenes } = getCity(city);
-  const description = hasScenes
-    ? `${name}의 거리와 사무실을 둘러보고 보유 코인과 다음 집 목표를 확인하세요.`
+  const description = city === "seoul"
+    ? "픽셀 서울에 온 걸 환영해! 출근하고, 카페에서 알바하고, 편의점도 들러 봐. 통장에 셀이 차곡차곡 쌓이면 다음 집으로 점프! 🏠"
     : `${name}의 도시 장면은 준비 중입니다.`;
 
   return {
@@ -34,7 +34,7 @@ export default async function CityPage({ params }: PageProps<"/city/[city]">) {
 
   return (
     <>
-      <MyCity key={city} {...details} />
+      <MyCity key={city} city={city as CityId} {...details} />
       {details.hasScenes && <JsonLd data={{
         "@context": "https://schema.org",
         "@type": "BreadcrumbList",

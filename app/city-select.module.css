@@ -14,6 +14,7 @@
 }
 
 .panel {
+  --map-width: min(100cqw, 85vh);
   box-sizing: border-box;
   width: min(100%, 690px);
   display: grid;
@@ -87,9 +88,14 @@
   cursor: pointer;
 }
 
-.primary { --city-x: 50%; --city-y: 71%; --city-width: 66%; z-index: 1; }
-.upper { --city-x: 88.5%; --city-y: 62%; --city-width: 22.5%; }
-.lower { --city-x: 11.5%; --city-y: 62%; --city-width: 22.5%; }
+.primary {
+  --city-x: 50%;
+  --city-y: calc(84% + min(5cqw, var(--map-width) * 0.024 + 12px));
+  --city-width: 66%;
+  z-index: 1;
+}
+.upper { --city-x: 88.5%; --city-y: 76%; --city-width: 22.5%; }
+.lower { --city-x: 11.5%; --city-y: 76%; --city-width: 22.5%; }
 
 .city .island { left: 0; bottom: 0; width: 100%; }
 .city .block { left: 9%; bottom: 16%; width: 82%; }
@@ -168,7 +174,8 @@
   width: 78%;
   text-decoration: none;
   min-height: 44px;
-  margin: clamp(22px, 10cqw, 70px) auto clamp(4px, 3vh, 30px);
+  /* Leave room for the front island and its curved path below the map. */
+  margin: calc(var(--map-width) * 0.19 + 18px) auto clamp(4px, 3vh, 30px);
   padding: 0.32em 0.5em;
   font-size: clamp(18px, 5.8cqw, 30px);
 }
