@@ -345,23 +345,15 @@
   padding: 0;
 }
 
-.mission {
+.activityStatus {
   min-height: 50px;
   display: grid;
   place-items: center;
   margin-inline: clamp(12px, 3vw, 24px);
 }
 
-.mission:empty {
+.activityStatus:empty {
   min-height: 10px;
-}
-
-.mission button {
-  padding: 7px 16px;
-  border: 1px solid #105a55;
-  background: #dbe7db;
-  color: #104d49;
-  font-weight: 800;
 }
 
 @media (max-width: 480px) {

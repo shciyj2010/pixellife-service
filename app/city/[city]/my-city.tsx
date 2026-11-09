@@ -90,7 +90,6 @@ export default function MyCity({ city, name, title, hasScenes }: { city: CityId;
   const activeActivity = active ? activities[active.id] : null;
   const atWork = routine.id === "work";
   const shift = `${Math.floor(time / 86_400_000)}:${routine.id}`;
-  const waitingForMission = !active && Boolean(routine.mission && !game.missions.includes(shift));
   const routineScene = activeActivity?.scene ?? routine.scene;
   const currentScene = scenes.find((item) => item.id === routineScene)!;
   const previewScene = !activeActivity && !atWork && preview?.shift === shift
@@ -163,13 +162,8 @@ export default function MyCity({ city, name, title, hasScenes }: { city: CityId;
                 <button type="button" onClick={() => openBank("spend")}>돈 쓰기</button>
               </div>
             </div>
-            <div className={styles.mission}>
+            <div className={styles.activityStatus}>
               {active && <small>{gameHourFormat.format(active.endsAt)} 종료</small>}
-              {waitingForMission && (
-                <button type="button" onClick={() => { void game.completeMission(shift); }}>
-                  {routine.mission}
-                </button>
-              )}
             </div>
 
             {hasScenes ? (

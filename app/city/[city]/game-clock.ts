@@ -43,13 +43,13 @@ export function routineAt(time: number) {
   const clock = date.getUTCHours();
   const workday = weekday >= 1 && weekday <= 5;
 
-  if (workday && clock === 7) return { id: "commute", location: "출근 중", mission: "일 하러 가기", scene: "street" } as const;
-  if (workday && clock >= 8 && clock < 18) return { id: "work", location: "회사", mission: null, scene: "office" } as const;
-  if (workday && clock === 18) return { id: "leave", location: "퇴근 중", mission: "퇴근하기", scene: "return" } as const;
-  if (!workday && clock >= 10 && clock < 12) return { id: "coffee", location: "카페", mission: null, scene: "cafe" } as const;
-  if (!workday && clock >= 14 && clock < 16) return { id: "park", location: "공원", mission: null, scene: "park" } as const;
-  if (clock >= 23 || clock < 7) return { id: "sleep", location: "집 · 취침중", mission: null, scene: "home" } as const;
-  return { id: "rest", location: "집 · 휴식중", mission: null, scene: "home" } as const;
+  if (workday && clock === 7) return { id: "commute", location: "출근 중", scene: "street" } as const;
+  if (workday && clock >= 8 && clock < 18) return { id: "work", location: "회사", scene: "office" } as const;
+  if (workday && clock === 18) return { id: "leave", location: "퇴근 중", scene: "return" } as const;
+  if (!workday && clock >= 10 && clock < 12) return { id: "coffee", location: "카페", scene: "cafe" } as const;
+  if (!workday && clock >= 14 && clock < 16) return { id: "park", location: "공원", scene: "park" } as const;
+  if (clock >= 23 || clock < 7) return { id: "sleep", location: "집 · 취침중", scene: "home" } as const;
+  return { id: "rest", location: "집 · 휴식중", scene: "home" } as const;
 }
 
 export function earningsAt(time: number, policyStartsAfter = gameStart, bonusStartsAfter = gameStart) {

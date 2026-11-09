@@ -25,7 +25,6 @@ type Save = {
   starterNoticeSeen: boolean;
   lastCity: CityId | null;
   avatar: AvatarId;
-  missions: string[];
   views: Partial<Record<CityId, CityView>>;
 };
 
@@ -74,7 +73,6 @@ export function readSave(now = Date.now()): Save | null {
         starterNoticeSeen: saved.starterNoticeSeen === true,
         lastCity: typeof saved.lastCity === "string" && Object.hasOwn(cities, saved.lastCity) ? saved.lastCity : null,
         avatar: saved.avatar === "male" ? "male" : "female",
-        missions: Array.isArray(saved.missions) ? saved.missions.filter((id: unknown) => typeof id === "string") : [],
         views,
       };
     }
@@ -135,7 +133,6 @@ export default function useGame(city: CityId) {
         starterGrantedAt: gameStart,
         starterNoticeSeen: false,
         avatar: "female",
-        missions: [],
         views: {},
       };
       const updated: Save = { ...current, lastCity: city };
@@ -236,13 +233,6 @@ export default function useGame(city: CityId) {
     return updateSave((current) => ({ ...current, avatar }));
   }
 
-  function completeMission(shift: string) {
-    return updateSave((current) => {
-      if (current.missions.includes(shift)) return current;
-      return { ...current, missions: [...current.missions, shift], views: cityViews(current, { preview: null }) };
-    });
-  }
-
   function acknowledgeStarterNotice() {
     return updateSave((current) => ({ ...current, starterNoticeSeen: true }));
   }
@@ -260,6 +250,6 @@ export default function useGame(city: CityId) {
   const availableBalance = balance + Math.min(0, active?.amount ?? 0);
   return { time, routine, active, payments, income, spent, balance, availableBalance, houseStage, nextHousePrice,
     startActivity, buyHouse, ready: save !== null, stockValue, houseValue, assetHistory,
-    view: save?.views[city] ?? defaultView, avatar: save?.avatar ?? "female", missions: save?.missions ?? [],
-    setView, setAvatar, completeMission, starterGrantedAt, houses, showStarterNotice: save !== null && !save.starterNoticeSeen, acknowledgeStarterNotice };
+    view: save?.views[city] ?? defaultView, avatar: save?.avatar ?? "female",
+    setView, setAvatar, starterGrantedAt, houses, showStarterNotice: save !== null && !save.starterNoticeSeen, acknowledgeStarterNotice };
 }
