@@ -545,6 +545,22 @@
   border: 1px solid #a2aaa1;
   background: #eef0e9;
   color: #17272b;
+  max-height: 90svh;
+  overflow-y: auto;
+  overflow-wrap: anywhere;
+  padding: clamp(14px, 4vw, 20px);
+}
+
+.starterNotice *,
+.starterNotice *::before,
+.starterNotice *::after {
+  box-sizing: border-box;
+}
+
+.starterNotice form,
+.starterNotice fieldset {
+  min-width: 0;
+  max-width: 100%;
 }
 
 .firstEntryDialog {
@@ -590,6 +606,7 @@
 
 .starterNotice dl div {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 8px;
   padding: 6px 0;
@@ -612,6 +629,8 @@
 
 .birthdayField {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
   gap: 6px;
   margin-block: 16px;
   font-weight: 700;
@@ -620,16 +639,28 @@
 .birthdayField input {
   box-sizing: border-box;
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
   min-height: 40px;
   padding: 6px 8px;
   border: 1px solid #a2aaa1;
   background: #fffaf1;
   color: inherit;
   font: inherit;
+  font-size: 16px;
+}
+
+.birthdayField input::-webkit-date-and-time-value {
+  min-width: 0;
+  text-align: left;
 }
 
 .genderField {
   display: flex;
+  flex-wrap: wrap;
+  min-inline-size: 0;
   gap: 18px;
   margin: 0 0 16px;
   padding: 0;

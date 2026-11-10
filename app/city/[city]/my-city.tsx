@@ -123,7 +123,7 @@ function FirstEntryFlow({
       {step === 3 && <>
         <h2 id="entry-title">서울에서 내 첫 집을 골라봐~😌🏠</h2>
         <p>어디든 고를 수 있어! 하지만 지금 통장 잔고가 1000만원 뿐인걸 잊지마... 선택가능한 매물만 표시되어 있어. ㅎㅎ 잘 골라봐!</p>
-        <Image className={styles.seoulMap} src="/my-city/seoul-map.svg" alt="한강을 중심으로 서울 25개 자치구를 나타낸 그림 지도" width={600} height={460} priority />
+        <Image className={styles.seoulMap} src="/my-city/seoul-map-v2.png" alt="서울 25개 자치구의 이름과 경계, 한강 위치를 표시한 밝은 픽셀 지도" width={1448} height={1086} priority />
         <button type="button" onClick={onFinish}>서울 라이프 시작 👉</button>
       </>}
     </dialog>
@@ -197,6 +197,8 @@ export default function MyCity({ city, name, title, hasScenes }: { city: CityId;
     : null;
   const [message, setMessage] = useState("");
   const [editingBirthday, setEditingBirthday] = useState(false);
+  const [resetError, setResetError] = useState("");
+  const [isResetting, setIsResetting] = useState(false);
   const notices = tab === "bell" && game.ready
     ? [...payments, ...investmentNotices(time, game.starterGrantedAt, game.houses)].sort((a, b) => b.time - a.time)
     : [];
@@ -337,6 +339,19 @@ export default function MyCity({ city, name, title, hasScenes }: { city: CityId;
                     ))}
                   </div>
                   <p><Link href="/">도시 선택으로 돌아가기</Link></p>
+                  <button type="button" className={styles.birthdayEdit} disabled={isResetting} onClick={async () => {
+                    if (!window.confirm("이 기기에 저장된 게임 진행과 생일·성별 정보를 모두 지우고 처음부터 시작할까요?")) return;
+                    setIsResetting(true);
+                    setResetError("");
+                    const error = await game.resetGame();
+                    if (error) {
+                      setResetError(error);
+                      setIsResetting(false);
+                    }
+                  }}>
+                    {isResetting ? "초기화 중…" : "데이터 초기화"}
+                  </button>
+                  {resetError && <p role="alert">{resetError}</p>}
                 </>
               )}
             </section>

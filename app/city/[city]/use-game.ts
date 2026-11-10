@@ -196,6 +196,7 @@ export default function useGame(city: CityId) {
   const [now, setNow] = useState(0);
 
   const latestSave = useRef<Save | null>(null);
+  const resetting = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -232,6 +233,12 @@ export default function useGame(city: CityId) {
 
     function syncSave(event: StorageEvent) {
       if (event.key !== saveKey) return;
+      if (event.newValue === null) {
+        resetting.current = true;
+        latestSave.current = null;
+        window.location.replace("/");
+        return;
+      }
       const currentTime = Date.now();
       const current = readSave(currentTime);
       if (!current) return;
@@ -268,6 +275,7 @@ export default function useGame(city: CityId) {
 
   async function updateSave(update: (current: Save, time: number) => Save | string) {
     function applyUpdate() {
+      if (resetting.current) return "데이터를 초기화하고 있어요.";
       const currentTime = Date.now();
       const current = readSave(currentTime) ?? latestSave.current;
       if (!current) return "게임을 불러오는 중이에요.";
@@ -334,6 +342,22 @@ export default function useGame(city: CityId) {
     return updateSave((current) => ({ ...current, starterNoticeSeen: true }));
   }
 
+  async function resetGame() {
+    return withSaveLock(() => {
+      resetting.current = true;
+      try {
+        localStorage.removeItem(saveKey);
+      } catch {
+        resetting.current = false;
+        return "데이터를 지우지 못했어요. 브라우저의 저장 공간 설정을 확인해 주세요.";
+      }
+      latestSave.current = null;
+      setSave(null);
+      window.location.replace("/");
+      return null;
+    });
+  }
+
   function acknowledgeFirstHomeIntro() {
     return updateSave((current) => ({ ...current, firstHomeIntroSeen: true }));
   }
@@ -374,15 +398,16 @@ export default function useGame(city: CityId) {
   }).length : 0;
 
   const parentalLoanRepaid = completed.some(({ label }) => label === "부모님 대여금 상환");
+  const firstEntryStep: 1 | 2 | 3 = !save?.starterNoticeSeen ? 1 : save.birthDate === null || save.birthdaySetupVersion !== 1 ? 2 : 3;
   return { time, routine, active, payments, income, spent, balance, availableBalance, houseStage, nextHousePrice,
     startActivity, buyHouse, ready: save !== null, houseValue, assetHistory, parentalLoanRepaid,
     view: save?.views[city] ?? defaultView, avatar: save?.avatar ?? "female",
     setView, setAvatar, starterGrantedAt, houses, paused: save?.pausedAt !== null && save?.pausedAt !== undefined,
     togglePause,
-    firstEntryStep: !save?.starterNoticeSeen ? 1 : save.birthDate === null || save.birthdaySetupVersion !== 1 ? 2 : 3,
+    firstEntryStep,
     showFirstEntry: save !== null && (
       !save.starterNoticeSeen || save.birthDate === null || save.birthdaySetupVersion !== 1 || !save.firstHomeIntroSeen
     ),
     birthDate: save?.birthDate ?? null, gender: save?.gender ?? null, saveBirthday,
-    activityUsesThisWeek, acknowledgeStarterNotice, acknowledgeFirstHomeIntro };
+    activityUsesThisWeek, acknowledgeStarterNotice, acknowledgeFirstHomeIntro, resetGame };
 }
