@@ -569,6 +569,50 @@
   overflow: auto;
 }
 
+.firstEntryDialog[open] {
+  animation: modalFadeIn 260ms ease-out both;
+}
+
+.firstEntryDialog[open]::backdrop {
+  animation: modalBackdropIn 260ms ease-out both;
+}
+
+.firstEntryDialog[data-closing] {
+  animation: modalFadeOut 220ms ease-in both;
+  pointer-events: none;
+}
+
+.firstEntryDialog[data-closing]::backdrop {
+  animation: modalBackdropOut 220ms ease-in both;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes modalFadeOut {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(4px); }
+}
+
+@keyframes modalBackdropIn {
+  from { background-color: #17272b00; }
+  to { background-color: #17272b88; }
+}
+
+@keyframes modalBackdropOut {
+  from { background-color: #17272b88; }
+  to { background-color: #17272b00; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .firstEntryDialog[open],
+  .firstEntryDialog[open]::backdrop {
+    animation-duration: 1ms;
+  }
+}
+
 .entryProgress {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
