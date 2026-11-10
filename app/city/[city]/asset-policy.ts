@@ -1,9 +1,9 @@
 import { gameHour, housePrices } from "./bank-activities";
 
-export const starterCash = 5_000_000;
-export const starterStock = 5_000_000;
+export const starterCash = 10_000_000;
+export const parentalLoanAmount = 10_000_000;
+export const parentalLoanRepaymentThreshold = 20_000_000;
 export const starterHouse = 3_000_000;
-export const stockGrowth = 0.01;
 export const houseGrowth = 0.005;
 export const gameWeek = 7 * 24 * gameHour;
 
@@ -29,7 +29,6 @@ function weeklyValue(base: number, rate: number, acquiredAt: number, time: numbe
 export function portfolioAt(time: number, starterGrantedAt: number, houses: number[]) {
   const currentHouse = houses.findLastIndex((purchasedAt) => purchasedAt <= time);
   return {
-    stockValue: weeklyValue(starterStock, stockGrowth, starterGrantedAt, time),
     houseValue: currentHouse < 0
       ? weeklyValue(starterHouse, houseGrowth, starterGrantedAt, time)
       : weeklyValue(housePrices[currentHouse], houseGrowth, houses[currentHouse], time),
@@ -39,7 +38,7 @@ export function portfolioAt(time: number, starterGrantedAt: number, houses: numb
 export function investmentNotices(time: number, grantedAt: number, houses: number[]) {
   if (time < grantedAt) return [];
 
-  const notices = [{ time: grantedAt, label: "시작 주식이 생겼어! 📈", amount: starterStock }];
+  const notices: { time: number; label: string; amount: number }[] = [];
   if (houses[0] === undefined || houses[0] > grantedAt) {
     notices.push({ time: grantedAt, label: "내 집이 생겼어! 🏠", amount: starterHouse });
   }
@@ -52,7 +51,6 @@ export function investmentNotices(time: number, grantedAt: number, houses: numbe
     }
   }
 
-  addGrowth("주식 가치가 올랐어! 📈", starterStock, stockGrowth, grantedAt, time);
   const houseStarts = [grantedAt, ...houses];
   houseStarts.forEach((since, index) => {
     const until = Math.min(time, (houseStarts[index + 1] ?? Infinity) - 1);

@@ -547,6 +547,38 @@
   color: #17272b;
 }
 
+.firstEntryDialog {
+  width: min(520px, calc(100% - 28px));
+  max-height: min(90svh, 760px);
+  overflow: auto;
+}
+
+.entryProgress {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0 0 20px;
+}
+
+.entryProgress span {
+  height: 5px;
+  border-radius: 999px;
+  background: #cbd2c9;
+}
+
+.entryProgress .entryProgressActive {
+  background: #105a55;
+}
+
+.seoulMap {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 12px 0 16px;
+  border: 1px solid #cbd2c9;
+  background: #e6eadf;
+}
+
 .starterNotice::backdrop {
   background: #17272b88;
 }

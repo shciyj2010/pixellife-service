@@ -1,6 +1,6 @@
 import { activities, activityLimitPerGameWeek, activityRewardIds, type ActivityId, type BankMode } from "./bank-activities";
 import { birthdayBonus, bonus, bonusHour, gameHourFormat, paydayShopping, salaryAt, salaryHour, vacationExpense, weeklyShopping } from "./game-clock";
-import { formatMoney } from "./asset-policy";
+import { formatMoney, parentalLoanAmount, parentalLoanRepaymentThreshold } from "./asset-policy";
 import type useGame from "./use-game";
 import styles from "./my-city.module.css";
 
@@ -41,8 +41,12 @@ export default function BankPanel({ game, mode, setMode, onStart, onBuyHouse, me
   return (
     <>
       <div className={styles.bankCharts}>
-        <Chart label="자산 그래프" values={game.assetHistory.map(({ total }) => total)} note="현금 · 주식 · 집값 합계" />
-        <Chart label="주식 그래프" values={game.assetHistory.map(({ stockValue }) => stockValue)} note="보유 주식 · 게임 주마다 +1%" />
+        <Chart label="자산 그래프" values={game.assetHistory.map(({ total }) => total)} note="현금 · 집값 합계" />
+      </div>
+      <div className={styles.assetValue}>
+        <span>부모님 대여금</span>
+        <strong>{game.parentalLoanRepaid ? "상환 완료" : formatMoney(parentalLoanAmount)}</strong>
+        <small className={styles.cashTotals}>통장 잔고가 {formatMoney(parentalLoanRepaymentThreshold)}에 도달하면 {formatMoney(parentalLoanAmount)}을 자동 상환</small>
       </div>
       <div className={styles.assetValue}>
         <span>현재 보유 집의 가격</span>

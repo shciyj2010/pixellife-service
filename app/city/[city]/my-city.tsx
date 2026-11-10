@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { CityId } from "../../cities";
 import { gameBarDate, gameDateFormat, gameHourFormat } from "./game-clock";
 import { activities, type ActivityId, type BankMode } from "./bank-activities";
-import { formatMoney, investmentNotices, starterCash, starterHouse, starterStock } from "./asset-policy";
+import { formatMoney, investmentNotices, starterCash } from "./asset-policy";
 import BankPanel from "./bank-panel";
 import useGame from "./use-game";
 import SceneArt from "./scene-art";
@@ -58,25 +59,73 @@ function Icon({ name }: { name: string }) {
   );
 }
 
-function StarterNotice({ onClose }: { onClose: () => void }) {
+type FirstEntryStep = 1 | 2 | 3;
+
+function FirstEntryFlow({
+  step,
+  birthDate,
+  gender,
+  onWelcome,
+  onSaveBirthday,
+  onFinish,
+}: {
+  step: FirstEntryStep;
+  birthDate: string | null;
+  gender: "female" | "male" | null;
+  onWelcome: () => void;
+  onSaveBirthday: (birthDate: string, gender: "female" | "male") => Promise<string | null>;
+  onFinish: () => void;
+}) {
   const dialog = useRef<HTMLDialogElement>(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (dialog.current && !dialog.current.open) dialog.current.showModal();
   }, []);
 
+  async function submitBirthday(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const errorMessage = await onSaveBirthday(String(form.get("birthDate")), form.get("gender") as "female" | "male");
+    setError(errorMessage ?? "");
+  }
+
   return (
-    <dialog ref={dialog} className={styles.starterNotice} aria-labelledby="starter-title" onClose={onClose}>
-      <h2 id="starter-title">픽셀 시티에 온 것을 환영해! 여기서는 뭐든 할 수 있어.</h2>
-      <p>넌 이미 부자야. (이건 농담😂) 이미 자가, 현금, 주식까지 있어! 하지만 열심히 모아서 다음 집으로 점프하자! 😘</p>
-      <dl>
-        <div><dt>현금</dt><dd>{formatMoney(starterCash)}</dd></div>
-        <div><dt>주식</dt><dd>{formatMoney(starterStock)}</dd></div>
-        <div><dt>기본 주택</dt><dd>{formatMoney(starterHouse)}</dd></div>
-      </dl>
-      <form method="dialog">
-        <button type="submit">확인</button>
-      </form>
+    <dialog ref={dialog} className={`${styles.starterNotice} ${styles.firstEntryDialog}`} aria-labelledby="entry-title" onCancel={(event) => event.preventDefault()}>
+      <div className={styles.entryProgress} role="progressbar" aria-label="첫 접속 설정 진행 상태" aria-valuemin={1} aria-valuemax={3} aria-valuenow={step}>
+        {[1, 2, 3].map((segment) => <span key={segment} className={segment <= step ? styles.entryProgressActive : ""} />)}
+      </div>
+      {step === 1 && <>
+        <h2 id="entry-title">픽셀 시티에 온 것을 환영해! 여기서는 뭐든 할 수 있어.</h2>
+        <p>넌 이미 부자야. (이건 농담😂) 현금과 주식으로 시작해서 열심히 모아 첫 집을 마련해 보자! 😘</p>
+        <dl>
+          <div><dt>내가 보유한 현금 (참고 : 엄빠 찬스🙇)</dt><dd>{formatMoney(starterCash)}</dd></div>
+        </dl>
+        <button type="button" onClick={onWelcome}>다음</button>
+      </>}
+      {step === 2 && <>
+        <h2 id="entry-title">생일 보너스 챙겨줄게! 😆🥳</h2>
+        <p>생일마다 보너스를 기다려봐. 얼마일지는 비밀~ (정보는 사용자의 기기에만 저장되고 우리는 알 수 없어. 돈은 ai가 자동 지급해줄거야. 😉)</p>
+        <form onSubmit={submitBirthday}>
+          <label className={styles.birthdayField}>
+            생일이 언제야?
+            <input name="birthDate" type="date" defaultValue={birthDate ?? undefined} required />
+          </label>
+          <fieldset className={styles.genderField}>
+            <legend>성별이 뭐야?</legend>
+            <label><input type="radio" name="gender" value="female" defaultChecked={gender === "female"} required /> 여자</label>
+            <label><input type="radio" name="gender" value="male" defaultChecked={gender === "male"} required /> 남자</label>
+          </fieldset>
+          {error && <p role="alert">{error}</p>}
+          <button type="submit">다음</button>
+        </form>
+      </>}
+      {step === 3 && <>
+        <h2 id="entry-title">서울에서 내 첫 집을 골라봐~😌🏠</h2>
+        <p>어디든 고를 수 있어! 하지만 지금 통장 잔고가 1000만원 뿐인걸 잊지마... 선택가능한 매물만 표시되어 있어. ㅎㅎ 잘 골라봐!</p>
+        <Image className={styles.seoulMap} src="/my-city/seoul-map.svg" alt="한강을 중심으로 서울 25개 자치구를 나타낸 그림 지도" width={600} height={460} priority />
+        <button type="button" onClick={onFinish}>서울 라이프 시작 👉</button>
+      </>}
     </dialog>
   );
 }
@@ -303,8 +352,17 @@ export default function MyCity({ city, name, title, hasScenes }: { city: CityId;
           ))}
         </nav>
       </section>
-      {game.showStarterNotice && <StarterNotice onClose={() => { void game.acknowledgeStarterNotice(); }} />}
-      {(game.showBirthdaySetup || editingBirthday) && (
+      {game.showFirstEntry && (
+        <FirstEntryFlow
+          step={game.firstEntryStep}
+          birthDate={game.birthDate}
+          gender={game.gender}
+          onWelcome={() => { void game.acknowledgeStarterNotice(); }}
+          onSaveBirthday={saveBirthday}
+          onFinish={() => { void game.acknowledgeFirstHomeIntro(); }}
+        />
+      )}
+      {editingBirthday && (
         <BirthdaySetup birthDate={game.birthDate} gender={game.gender} onSave={saveBirthday} />
       )}
     </main>

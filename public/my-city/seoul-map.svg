@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 460" role="img" aria-labelledby="title desc">
+  <title id="title">서울 지도</title>
+  <desc id="desc">서울의 25개 자치구와 도시를 가로지르는 한강을 그린 그림 지도</desc>
+  <defs>
+    <clipPath id="seoul-outline">
+      <path d="m93 70 45-21 55 7 38-18 48 14 40-14 54 20 47-4 39 27 52 7 27 37-13 38 20 28-19 35 17 39-15 40 16 30-18 35-42 8-18 37-47 10-26 28-50-4-30 17-43-15-39 8-33-23-43 5-29-25-38-9-16-34-30-15 7-35-20-26 17-35-13-31 17-36-8-36 27-23z"/>
+    </clipPath>
+    <pattern id="park-dots" width="9" height="9" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.2" fill="#76a77d" opacity=".55"/>
+    </pattern>
+  </defs>
+  <rect width="600" height="460" rx="18" fill="#e6eadf"/>
+  <path d="m93 70 45-21 55 7 38-18 48 14 40-14 54 20 47-4 39 27 52 7 27 37-13 38 20 28-19 35 17 39-15 40 16 30-18 35-42 8-18 37-47 10-26 28-50-4-30 17-43-15-39 8-33-23-43 5-29-25-38-9-16-34-30-15 7-35-20-26 17-35-13-31 17-36-8-36 27-23z" fill="#d7dfce" stroke="#546963" stroke-width="4" stroke-linejoin="round"/>
+  <g clip-path="url(#seoul-outline)" stroke="#a6b3a2" stroke-width="2" stroke-dasharray="5 4" stroke-linejoin="round">
+    <path fill="#e5dfc8" d="M68 34h95v89H68z"/><path fill="#d9e2ce" d="M163 34h92v89h-92z"/><path fill="#e9e5d2" d="M255 34h91v89h-91z"/><path fill="#dce5d2" d="M346 34h101v89H346z"/><path fill="#e8e1cb" d="M447 34h100v89H447z"/>
+    <path fill="#d9e2ce" d="M68 123h98v91H68z"/><path fill="#e9e5d2" d="M166 123h88v91h-88z"/><path fill="#dce5d2" d="M254 123h96v91h-96z"/><path fill="#e5dfc8" d="M350 123h93v91h-93z"/><path fill="#d9e2ce" d="M443 123h104v91H443z"/>
+    <path fill="#e8e1cb" d="M68 214h102v95H68z"/><path fill="#dce5d2" d="M170 214h89v95h-89z"/><path fill="#e5dfc8" d="M259 214h91v95h-91z"/><path fill="#d9e2ce" d="M350 214h96v95h-96z"/><path fill="#e9e5d2" d="M446 214h101v95H446z"/>
+    <path fill="#dce5d2" d="M68 309h95v96H68z"/><path fill="#e8e1cb" d="M163 309h91v96h-91z"/><path fill="#d9e2ce" d="M254 309h97v96h-97z"/><path fill="#e9e5d2" d="M351 309h93v96h-93z"/><path fill="#dce5d2" d="M444 309h103v96H444z"/>
+  </g>
+  <g clip-path="url(#seoul-outline)">
+    <path d="M77 208c66-8 99 4 147 13s82 25 130 24 82-7 126 6 77 26 130 18" fill="none" stroke="#9fcbd0" stroke-width="31" stroke-linecap="round"/>
+    <path d="M77 208c66-8 99 4 147 13s82 25 130 24 82-7 126 6 77 26 130 18" fill="none" stroke="#c2e0de" stroke-width="20" stroke-linecap="round"/>
+    <path d="M84 182c27-17 44-17 65-5 12 7 22 18 27 34-25 3-48-1-72-10zM430 307c24-11 44-9 67 4l17 20-10 19-42 1-31-15z" fill="#b5d1ad"/>
+    <path d="M84 182c27-17 44-17 65-5 12 7 22 18 27 34-25 3-48-1-72-10zM430 307c24-11 44-9 67 4l17 20-10 19-42 1-31-15z" fill="url(#park-dots)"/>
+    <path d="M112 99 174 152l-22 47 66 53-39 66 68 58M249 73l28 83-35 36 57 58-17 65 50 75M362 80l-27 93 46 43-34 57 47 62-7 63M489 119l-43 58 42 55-29 66 34 54" fill="none" stroke="#f7f5e9" stroke-width="7" opacity=".9"/>
+  </g>
+  <g fill="#304641" font-family="Apple SD Gothic Neo, Malgun Gothic, sans-serif" font-size="12" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#f1f0e7" stroke-width="3" stroke-linejoin="round">
+    <text x="123" y="90">은평구</text><text x="208" y="76">강북구</text><text x="298" y="75">도봉구</text><text x="393" y="82">노원구</text><text x="489" y="94">중랑구</text>
+    <text x="118" y="157">서대문구</text><text x="210" y="139">종로구</text><text x="298" y="139">성북구</text><text x="391" y="145">동대문구</text><text x="489" y="156">광진구</text>
+    <text x="120" y="251">마포구</text><text x="208" y="235">중구</text><text x="299" y="226">성동구</text><text x="397" y="236">강동구</text><text x="494" y="258">송파구</text>
+    <text x="118" y="344">강서구</text><text x="207" y="365">양천구</text><text x="301" y="344">용산구</text><text x="395" y="357">강남구</text><text x="490" y="359">서초구</text>
+    <text x="151" y="296">영등포구</text><text x="252" y="294">동작구</text><text x="346" y="296">관악구</text><text x="444" y="293">구로구</text><text x="519" y="309">금천구</text>
+  </g>
+  <g font-family="Apple SD Gothic Neo, Malgun Gothic, sans-serif" font-weight="800">
+    <rect x="22" y="18" width="112" height="30" rx="4" fill="#fffaf1" stroke="#a2aaa1"/>
+    <text x="37" y="39" fill="#304641" font-size="16">서울 특별시</text>
+    <path d="M557 47v27m0-27-6 9m6-9 6 9" fill="none" stroke="#546963" stroke-width="2"/>
+    <text x="557" y="40" fill="#546963" font-size="11" text-anchor="middle">N</text>
+    <rect x="249" y="224" width="76" height="24" rx="12" fill="#e4f1ed" stroke="#83b8bb"/>
+    <text x="287" y="241" fill="#367e83" font-size="12" text-anchor="middle">한강</text>
+    <text x="300" y="440" fill="#6c7970" font-size="10" text-anchor="middle">서울 25개 자치구 · 그림 지도</text>
+  </g>
+</svg>
