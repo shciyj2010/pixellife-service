@@ -1,14 +1,24 @@
 import { gameHour, housePrices } from "./bank-activities";
 
-export const starterCash = 500;
-export const starterStock = 500;
-export const starterHouse = 300;
+export const starterCash = 5_000_000;
+export const starterStock = 5_000_000;
+export const starterHouse = 3_000_000;
 export const stockGrowth = 0.01;
 export const houseGrowth = 0.005;
 export const gameWeek = 7 * 24 * gameHour;
 
-export function formatCells(amount: number) {
-  return `${amount.toLocaleString("ko-KR", { maximumFractionDigits: 2 })} 셀`;
+export function formatMoney(amount: number) {
+  const rounded = Math.round(amount / 100_000) * 100_000;
+  const sign = rounded < 0 ? "−" : "";
+  const absolute = Math.abs(rounded);
+  const billions = Math.floor(absolute / 100_000_000);
+  const tenThousands = Math.floor((absolute % 100_000_000) / 10_000);
+  const remainder = tenThousands ? `${tenThousands}만원` : "";
+
+  if (billions > 0) {
+    return `${sign}${billions.toLocaleString("ko-KR")}억${remainder ? ` ${remainder}` : ""}`;
+  }
+  return `${sign}${tenThousands}만원`;
 }
 
 function weeklyValue(base: number, rate: number, acquiredAt: number, time: number) {

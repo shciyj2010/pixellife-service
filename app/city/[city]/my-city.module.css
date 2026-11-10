@@ -45,6 +45,11 @@
   font-variant-numeric: tabular-nums;
 }
 
+.statusBarHidden {
+  visibility: hidden;
+  background: transparent;
+}
+
 .frame svg {
   width: 24px;
   height: 24px;
@@ -96,12 +101,51 @@
 
 .statusBar {
   margin-block: 8px 12px;
-  padding: 6px 8px;
-  flex-wrap: wrap;
+  padding: 1px 8px;
+  gap: 6px;
+  flex-wrap: nowrap;
   background: #dbe7db;
   color: #105a55;
   font-size: clamp(0.75rem, 3vw, 0.95rem);
   font-variant-numeric: tabular-nums;
+}
+
+.statusBar time {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: clip;
+  font-size: clamp(0.74rem, 3vw, 1.1rem);
+}
+
+.statusBar strong {
+  min-width: 0;
+  overflow: hidden;
+  flex: 1;
+  text-align: right;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.pauseButton {
+  display: inline-grid;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  place-items: center;
+  padding: 0;
+  border: 1px solid #83a29a;
+  border-radius: 3px;
+  background: #fffaf1;
+  color: #105a55;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.pauseButton[aria-pressed="true"] {
+  background: #105a55;
+  color: #fffaf1;
 }
 
 .sceneFrame {
@@ -532,4 +576,49 @@
   color: #fffaf1;
   cursor: pointer;
   font: inherit;
+}
+
+.birthdayField {
+  display: grid;
+  gap: 6px;
+  margin-block: 16px;
+  font-weight: 700;
+}
+
+.birthdayField input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 40px;
+  padding: 6px 8px;
+  border: 1px solid #a2aaa1;
+  background: #fffaf1;
+  color: inherit;
+  font: inherit;
+}
+
+.genderField {
+  display: flex;
+  gap: 18px;
+  margin: 0 0 16px;
+  padding: 0;
+  border: 0;
+}
+
+.genderField legend {
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+.genderField label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.birthdayEdit {
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 1px solid #a2aaa1;
+  background: #f7f8f3;
+  color: inherit;
 }

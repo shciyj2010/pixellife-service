@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { cities, type CityId } from "../../cities";
-import { earningsAt, gameStart, gameTimeAt, legacyMealPrice, migrateElapsed, routineAt } from "./game-clock";
-import { activities, activityPayments, gameHour, housePrices, type Activity, type ActivityId, type BankMode } from "./bank-activities";
+import { birthdayBonus, earningsAt, gameStart, gameTimeAt, legacyGameTimeAt, legacyMealPrice, migrateElapsed, routineAt } from "./game-clock";
+import { activities, activityLimitPerGameWeek, activityPayments, activityRewardIds, gameHour, housePrices, type Activity, type ActivityId, type BankMode } from "./bank-activities";
 import { gameWeek, portfolioAt, starterCash } from "./asset-policy";
 
 const tabs = ["home", "bank", "bell", "settings"] as const;
@@ -15,14 +15,20 @@ const defaultView: CityView = { tab: "home", bankMode: "earn", preview: null };
 const saveKey = "pixel-city-life:game:v1";
 type Save = {
   startedAt: number;
+  pausedAt: number | null;
+  pausedDuration: number;
   meals: number;
-  clockVersion: 2;
+  clockVersion: 3;
+  moneyVersion: 1;
   history: Activity[];
   houses: number[];
   policyStartsAfter: number;
   bonusStartsAfter: number;
   starterGrantedAt: number;
   starterNoticeSeen: boolean;
+  birthDate: string | null;
+  gender: AvatarId | null;
+  birthdaySetupVersion: number;
   lastCity: CityId | null;
   avatar: AvatarId;
   views: Partial<Record<CityId, CityView>>;
@@ -30,22 +36,43 @@ type Save = {
 
 const legacyActivityAmounts = { overtime: 400, cafe: 300, store: -100, storeShift: 100 };
 
+function gameWeekStart(time: number) {
+  const date = new Date(time);
+  date.setUTCHours(0, 0, 0, 0);
+  date.setUTCDate(date.getUTCDate() - ((date.getUTCDay() + 6) % 7));
+  return date.getTime();
+}
+
+function validBirthDate(value: unknown): value is string {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
+
 export function readSave(now = Date.now()): Save | null {
   try {
     const saved = JSON.parse(localStorage.getItem(saveKey) ?? "null");
     if (saved && Number.isFinite(saved.startedAt) && saved.startedAt > 0 &&
         Number.isSafeInteger(saved.meals) && saved.meals >= 0) {
-      const startedAt = saved.clockVersion === 2
+      const startedAt = saved.clockVersion === 2 || saved.clockVersion === 3
         ? saved.startedAt
         : now - migrateElapsed(now - saved.startedAt);
+      const migratingClock = saved.clockVersion !== 3;
+      const convertingMoney = saved.moneyVersion !== 1;
+      const moneyScale = convertingMoney ? 10_000 : 1;
+      const timeShift = migratingClock
+        ? gameTimeAt(now - startedAt) - legacyGameTimeAt(now - startedAt)
+        : 0;
       const history = Array.isArray(saved.history) ? saved.history
         .filter((entry: Activity) => entry && Object.hasOwn(activities, entry.id) && Number.isSafeInteger(entry.endsAt))
         .map((entry: Activity) => ({
           ...entry,
-          amount: Number.isSafeInteger(entry.amount) ? entry.amount : legacyActivityAmounts[entry.id],
+          endsAt: entry.endsAt + timeShift,
+          amount: (Number.isSafeInteger(entry.amount) ? entry.amount : legacyActivityAmounts[entry.id]) * moneyScale,
         })) : [];
       const houses = Array.isArray(saved.houses)
-        ? saved.houses.filter(Number.isSafeInteger).slice(0, housePrices.length) as number[]
+        ? (saved.houses.filter(Number.isSafeInteger).slice(0, housePrices.length) as number[])
+          .map((time) => time + timeShift)
         : [];
       const views: Save["views"] = {};
       for (const city of Object.keys(cities) as CityId[]) {
@@ -60,17 +87,23 @@ export function readSave(now = Date.now()): Save | null {
       }
       return {
         startedAt,
+        pausedAt: Number.isFinite(saved.pausedAt) && saved.pausedAt > 0 ? saved.pausedAt : null,
+        pausedDuration: Number.isFinite(saved.pausedDuration) && saved.pausedDuration >= 0 ? saved.pausedDuration : 0,
         meals: saved.meals,
-        clockVersion: 2,
+        clockVersion: 3,
+        moneyVersion: 1,
         history,
         houses,
-        policyStartsAfter: Number.isSafeInteger(saved.policyStartsAfter)
+        policyStartsAfter: migratingClock ? gameStart : Number.isSafeInteger(saved.policyStartsAfter)
           ? saved.policyStartsAfter : gameTimeAt(now - startedAt),
-        bonusStartsAfter: Number.isSafeInteger(saved.bonusStartsAfter)
+        bonusStartsAfter: migratingClock ? gameStart : Number.isSafeInteger(saved.bonusStartsAfter)
           ? saved.bonusStartsAfter : gameTimeAt(now - startedAt),
-        starterGrantedAt: Number.isSafeInteger(saved.starterGrantedAt)
+        starterGrantedAt: migratingClock ? gameStart : Number.isSafeInteger(saved.starterGrantedAt)
           ? saved.starterGrantedAt : gameTimeAt(now - startedAt),
         starterNoticeSeen: saved.starterNoticeSeen === true,
+        birthDate: validBirthDate(saved.birthDate) ? saved.birthDate : null,
+        gender: saved.gender === "male" || saved.gender === "female" ? saved.gender : null,
+        birthdaySetupVersion: saved.birthdaySetupVersion === 1 ? 1 : 0,
         lastCity: typeof saved.lastCity === "string" && Object.hasOwn(cities, saved.lastCity) ? saved.lastCity : null,
         avatar: saved.avatar === "male" ? "male" : "female",
         views,
@@ -91,7 +124,20 @@ function playerPayments(save: Save | null, time: number) {
   const grant = save && save.starterGrantedAt <= time
     ? [{ time: save.starterGrantedAt, label: "시작 지원금", amount: starterCash }]
     : [];
-  return [...grant, ...activityPayments(save?.history ?? [], time), ...purchases];
+  const birthdays: { time: number; label: string; amount: number }[] = [];
+  if (save?.birthDate) {
+    const [, monthText, dayText] = save.birthDate.split("-");
+    const month = Number(monthText) - 1;
+    const birthDay = Number(dayText);
+    for (let year = new Date(gameStart).getUTCFullYear(); year <= new Date(time).getUTCFullYear(); year += 1) {
+      const day = month === 1 && birthDay === 29 && new Date(Date.UTC(year, 1, 29)).getUTCMonth() !== 1 ? 28 : birthDay;
+      const birthday = Date.UTC(year, month, day, 10);
+      if (birthday >= gameStart && birthday <= time) {
+        birthdays.push({ time: birthday, label: "생일 보너스", amount: birthdayBonus });
+      }
+    }
+  }
+  return [...grant, ...activityPayments(save?.history ?? [], time), ...purchases, ...birthdays];
 }
 
 function writeSave(save: Save) {
@@ -107,8 +153,13 @@ function withSaveLock<T>(action: () => T): Promise<T> {
 }
 
 function balanceAt(save: Save, time: number) {
-  return earningsAt(time, save.policyStartsAfter, save.bonusStartsAfter).total - save.meals * legacyMealPrice
+  return earningsAt(time).total - save.meals * legacyMealPrice
     + playerPayments(save, time).reduce((sum, payment) => sum + payment.amount, 0);
+}
+
+function elapsedAt(save: Save, now: number) {
+  const endpoint = save.pausedAt ?? now;
+  return Math.max(0, endpoint - save.startedAt - save.pausedDuration);
 }
 
 export default function useGame(city: CityId) {
@@ -124,14 +175,20 @@ export default function useGame(city: CityId) {
       const currentTime = Date.now();
       const current = readSave(currentTime) ?? latestSave.current ?? {
         startedAt: currentTime,
+        pausedAt: null,
+        pausedDuration: 0,
         meals: 0,
-        clockVersion: 2,
+        clockVersion: 3,
+        moneyVersion: 1,
         history: [],
         houses: [],
         policyStartsAfter: gameStart,
         bonusStartsAfter: gameStart,
         starterGrantedAt: gameStart,
         starterNoticeSeen: false,
+        birthDate: null,
+        gender: null,
+        birthdaySetupVersion: 0,
         avatar: "female",
         views: {},
       };
@@ -161,18 +218,17 @@ export default function useGame(city: CityId) {
     };
   }, [city]);
 
-  const time = save ? gameTimeAt(now - save.startedAt) : gameStart;
+  const time = save ? gameTimeAt(elapsedAt(save, now)) : gameStart;
   const routine = routineAt(time);
   const paymentHour = Math.floor(time / gameHour) * gameHour;
-  const policyStartsAfter = save?.policyStartsAfter;
-  const bonusStartsAfter = save?.bonusStartsAfter;
-  const payroll = useMemo(() => earningsAt(paymentHour, policyStartsAfter, bonusStartsAfter), [paymentHour, policyStartsAfter, bonusStartsAfter]);
+  const payroll = useMemo(() => earningsAt(paymentHour), [paymentHour]);
   const active = save?.history.find(({ endsAt }) => endsAt > time);
   const completed = playerPayments(save, time);
   const payments = [...payroll.payments, ...completed].sort((a, b) => a.time - b.time);
-  const income = payroll.total + completed.reduce((sum, payment) => sum + Math.max(0, payment.amount), 0);
+  const allPayments = [...payroll.payments, ...completed];
+  const income = allPayments.reduce((sum, payment) => sum + Math.max(0, payment.amount), 0);
   const spent = (save?.meals ?? 0) * legacyMealPrice
-    + completed.reduce((sum, payment) => sum - Math.min(0, payment.amount), 0);
+    + allPayments.reduce((sum, payment) => sum - Math.min(0, payment.amount), 0);
   const balance = income - spent;
   const houseStage = save?.houses.length ?? 0;
   const nextHousePrice = housePrices[houseStage] ?? null;
@@ -182,7 +238,7 @@ export default function useGame(city: CityId) {
       const currentTime = Date.now();
       const current = readSave(currentTime) ?? latestSave.current;
       if (!current) return "게임을 불러오는 중이에요.";
-      const gameTime = gameTimeAt(currentTime - current.startedAt);
+      const gameTime = gameTimeAt(elapsedAt(current, currentTime));
       const updated = update(current, gameTime);
       if (typeof updated === "string") return updated;
       writeSave(updated);
@@ -201,8 +257,16 @@ export default function useGame(city: CityId) {
       if (routineAt(gameTime).id === "work" && activities[id].scene !== "office") {
         return "지금은 회사에 있을 시간이야. 퇴근하고 가자! 💼";
       }
+      if (activityRewardIds.includes(id)) {
+        const weekStart = gameWeekStart(gameTime);
+        const completedThisWeek = current.history.filter((entry) => {
+          if (!activityRewardIds.includes(entry.id)) return false;
+          const startedAt = entry.endsAt - activities[entry.id].hours * gameHour;
+          return gameWeekStart(startedAt) === weekStart;
+        }).length;
+        if (completedThisWeek >= activityLimitPerGameWeek) return "이번 게임 주의 추가 활동 횟수를 모두 사용했어요.";
+      }
       const { amount, hours } = activities[id];
-      if (amount < 0 && balanceAt(current, gameTime) + amount < 0) return "잔액이 부족해요.";
       return {
         ...current,
         history: [...current.history, { id, endsAt: gameTime + hours * gameHour, amount }],
@@ -237,6 +301,24 @@ export default function useGame(city: CityId) {
     return updateSave((current) => ({ ...current, starterNoticeSeen: true }));
   }
 
+  function saveBirthday(birthDate: string, gender: AvatarId) {
+    if (!validBirthDate(birthDate)) return Promise.resolve("생년월일을 확인해 주세요.");
+    return updateSave((current) => ({ ...current, birthDate, gender, avatar: gender, birthdaySetupVersion: 1 }));
+  }
+
+  function togglePause() {
+    return updateSave((current) => {
+      if (current.pausedAt !== null) {
+        return {
+          ...current,
+          pausedAt: null,
+          pausedDuration: current.pausedDuration + Math.max(0, Date.now() - current.pausedAt),
+        };
+      }
+      return { ...current, pausedAt: Date.now() };
+    });
+  }
+
   const starterGrantedAt = save?.starterGrantedAt ?? gameStart;
   const houses = save?.houses ?? [];
   const { stockValue, houseValue } = portfolioAt(time, starterGrantedAt, houses);
@@ -244,12 +326,22 @@ export default function useGame(city: CityId) {
     const sampleTime = Math.max(starterGrantedAt, time - (13 - index) * gameWeek);
     const cash = balance - payments.reduce((sum, payment) => sum + (payment.time > sampleTime ? payment.amount : 0), 0);
     const { stockValue, houseValue } = portfolioAt(sampleTime, starterGrantedAt, houses);
-    return { stockValue, total: Math.max(0, cash) + stockValue + houseValue };
+    return { stockValue, total: cash + stockValue + houseValue };
   });
 
   const availableBalance = balance + Math.min(0, active?.amount ?? 0);
+  const activityUsesThisWeek = save ? save.history.filter((entry) => {
+    if (!activityRewardIds.includes(entry.id)) return false;
+    const startedAt = entry.endsAt - activities[entry.id].hours * gameHour;
+    return gameWeekStart(startedAt) === gameWeekStart(time);
+  }).length : 0;
+
   return { time, routine, active, payments, income, spent, balance, availableBalance, houseStage, nextHousePrice,
     startActivity, buyHouse, ready: save !== null, stockValue, houseValue, assetHistory,
     view: save?.views[city] ?? defaultView, avatar: save?.avatar ?? "female",
-    setView, setAvatar, starterGrantedAt, houses, showStarterNotice: save !== null && !save.starterNoticeSeen, acknowledgeStarterNotice };
+    setView, setAvatar, starterGrantedAt, houses, paused: save?.pausedAt !== null && save?.pausedAt !== undefined,
+    togglePause, showStarterNotice: save !== null && !save.starterNoticeSeen,
+    showBirthdaySetup: save !== null && save.starterNoticeSeen && (save.birthDate === null || save.birthdaySetupVersion !== 1),
+    birthDate: save?.birthDate ?? null, gender: save?.gender ?? null, saveBirthday,
+    activityUsesThisWeek, acknowledgeStarterNotice };
 }

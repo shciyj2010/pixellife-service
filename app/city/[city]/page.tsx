@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: PageProps<"/city/[city]">): P
   const { city } = await params;
   const { name, hasScenes } = getCity(city);
   const description = city === "seoul"
-    ? "픽셀 서울에 온 걸 환영해! 출근하고, 카페에서 알바하고, 편의점도 들러 봐. 통장에 셀이 차곡차곡 쌓이면 다음 집으로 점프! 🏠"
+    ? "픽셀 서울에 온 걸 환영해! 출근하고, 카페에서 알바하고, 편의점도 들러 봐. 통장에 원이 차곡차곡 쌓이면 다음 집으로 점프! 🏠"
     : `${name}의 도시 장면은 준비 중입니다.`;
 
   return {

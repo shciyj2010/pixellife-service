@@ -1,10 +1,14 @@
 export const gameHour = 3_600_000;
 export const activities = {
-  overtime: { label: "회사에서 야근하기", location: "회사 · 야근 중", scene: "office", hours: 4, amount: 100 },
-  cafe: { label: "카페에서 알바하기", location: "카페 · 알바 중", scene: "cafe", hours: 4, amount: 100 },
-  storeShift: { label: "편의점에서 알바하기", location: "편의점 · 알바 중", scene: "store", hours: 4, amount: 100 },
-  store: { label: "편의점에서 쇼핑하기", location: "편의점 · 쇼핑 중", scene: "store", hours: 1, amount: -20 },
+  overtime: { label: "회사에서 야근하기", location: "회사 · 야근 중", scene: "office", hours: 4, amount: 500_000 },
+  cafe: { label: "카페에서 알바하기", location: "카페 · 알바 중", scene: "cafe", hours: 4, amount: 500_000 },
+  storeShift: { label: "편의점에서 알바하기", location: "편의점 · 알바 중", scene: "store", hours: 4, amount: 500_000 },
+  store: { label: "편의점에서 쇼핑하기", location: "편의점 · 쇼핑 중", scene: "store", hours: 1, amount: -100_000 },
 } as const;
+
+export const activityLimitPerGameWeek = 2;
+export const activityGameWeek = 7 * 24 * gameHour;
+export const activityRewardIds: ActivityId[] = ["overtime", "cafe", "storeShift"];
 
 export type ActivityId = keyof typeof activities;
 export type Activity = { id: ActivityId; endsAt: number; amount: number };
@@ -18,4 +22,4 @@ export function activityPayments(history: Activity[], time: number) {
   }));
 }
 
-export const housePrices = [1000, 3000, 6000, 10000, 20000] as const;
+export const housePrices = [10_000_000, 30_000_000, 60_000_000, 100_000_000, 200_000_000] as const;

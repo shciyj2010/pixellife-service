@@ -4,16 +4,33 @@ const week = 7 * day;
 const weekdayHours = 2;
 
 // UTC values represent the in-game calendar, independent of device time zones.
-export const gameStart = Date.UTC(2026, 10, 6, 18);
+export const gameStart = Date.UTC(2016, 10, 6, 18);
+export const gameEnd = Date.UTC(2026, 10, 6, 18);
+const realCampaignDuration = 30 * day;
 const firstMonday = Date.UTC(2026, 10, 2);
 
 
-export const salary = 300;
-export const bonus = 20;
+export const salaryHour = 10;
+export const bonus = 100_000;
 export const bonusHour = 10;
-export const legacyMealPrice = 100;
+export const weeklyShopping = 100_000;
+export const paydayShopping = 500_000;
+export const vacationExpense = 5_000_000;
+export const birthdayBonus = 1_000_000;
+export const legacyMealPrice = 1_000_000;
 
-export function gameTimeAt(elapsed: number, hoursPerWeekday = weekdayHours) {
+const monthlyMinimumWage = [
+  1_260_270, 1_352_230, 1_573_770, 1_745_150, 1_795_310,
+  1_822_480, 1_914_440, 2_010_580, 2_060_740, 2_096_270, 2_156_880,
+];
+
+export function salaryAt(time: number) {
+  const year = Math.min(2026, Math.max(2016, new Date(time).getUTCFullYear()));
+  const minimumWageRatio = monthlyMinimumWage[year - 2016] / monthlyMinimumWage[0];
+  return Math.round(2_000_000 * minimumWageRatio ** 1.1 / 100_000) * 100_000;
+}
+
+export function legacyGameTimeAt(elapsed: number, hoursPerWeekday = weekdayHours) {
   const weekdayTime = 5 * hoursPerWeekday * hour;
   const realWeek = weekdayTime + 2 * hour;
   const startOffset = 4.75 * hoursPerWeekday * hour;
@@ -27,8 +44,13 @@ export function gameTimeAt(elapsed: number, hoursPerWeekday = weekdayHours) {
   return firstMonday + weeks * week + gameOffset;
 }
 
+export function gameTimeAt(elapsed: number) {
+  const progress = Math.min(1, Math.max(0, elapsed) / realCampaignDuration);
+  return gameStart + (gameEnd - gameStart) * progress;
+}
+
 export function migrateElapsed(elapsed: number) {
-  const gameElapsed = gameTimeAt(elapsed, 4) - firstMonday;
+  const gameElapsed = legacyGameTimeAt(elapsed, 4) - firstMonday;
   const weeks = Math.floor(gameElapsed / week);
   const remaining = gameElapsed % week;
   const weekdays = Math.min(remaining, 5 * day);
@@ -52,25 +74,31 @@ export function routineAt(time: number) {
   return { id: "rest", location: "집 · 휴식중", scene: "home" } as const;
 }
 
-export function earningsAt(time: number, policyStartsAfter = gameStart, bonusStartsAfter = gameStart) {
+export function earningsAt(time: number) {
   const payments: { time: number; label: string; amount: number }[] = [];
 
-  for (let midnight = gameStart + 6 * hour; midnight <= time; midnight += day) {
+  const startDate = new Date(gameStart);
+  const firstMidnight = Date.UTC(startDate.getUTCFullYear(), startDate.getUTCMonth(), startDate.getUTCDate());
+  for (let midnight = firstMidnight; midnight <= time; midnight += day) {
     const date = new Date(midnight);
     const weekday = date.getUTCDay();
+    const morning = midnight + salaryHour * hour;
     const evening = midnight + 18 * hour;
-    const morning = midnight + bonusHour * hour;
-    const legacy = evening <= policyStartsAfter;
-    const lastDay = new Date(midnight + day).getUTCMonth() !== date.getUTCMonth();
-    if (morning > bonusStartsAfter && morning <= time && (weekday === 1 || weekday === 3 || weekday === 5)) {
-      payments.push({ time: morning, label: "보너스 도착! 🎁", amount: bonus });
+    const inGame = (eventTime: number) => eventTime >= gameStart && eventTime <= time;
+    const isLastDay = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0)).getUTCDate() === date.getUTCDate();
+
+    if (weekday === 3 && inGame(morning)) {
+      payments.push({ time: morning, label: "수요일 보너스", amount: bonus });
     }
-    if (evening > time) continue;
-    if (legacy ? date.getUTCDate() === 25 : lastDay) {
-      payments.push({ time: evening, label: "월급", amount: legacy ? 1800 : salary });
+    if ((weekday === 1 || weekday === 3) && inGame(evening)) {
+      payments.push({ time: evening, label: "필수 쇼핑", amount: -weeklyShopping });
     }
-    if (evening <= bonusStartsAfter && weekday === (legacy ? 4 : 5)) {
-      payments.push({ time: evening, label: legacy ? "목요일 보너스" : "금요일 보너스", amount: legacy ? 300 : 50 });
+    if (isLastDay) {
+      if (inGame(morning)) payments.push({ time: morning, label: "월급", amount: salaryAt(midnight) });
+      if (inGame(evening)) payments.push({ time: evening, label: "월급날 쇼핑", amount: -paydayShopping });
+    }
+    if (date.getUTCMonth() === 7 && date.getUTCDate() === 1 && inGame(evening)) {
+      payments.push({ time: evening, label: "여름 휴가비", amount: -vacationExpense });
     }
   }
 
